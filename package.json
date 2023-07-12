@@ -1,0 +1,20 @@
+{
+  "name": "risc-v-emulator",
+  "version": "1.0.0",
+  "description": "An emulator for the RISC-V instruction set architecture",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "/dist"
+  ],
+  "scripts": {
+    "test": "npm run build; node ./dist/test",
+    "build": "tsc",
+    "start": "npm run build; node ./dist"
+  },
+  "author": "Alice Parrish",
+  "license": "ISC",
+  "dependencies": {
+    "immutable": "^4.3.0"
+  }
+}
