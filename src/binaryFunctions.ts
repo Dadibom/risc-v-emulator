@@ -26,10 +26,11 @@ export function getBit(input: number, index: number): number | null {
   return (input >>> index) & 0x00000001
 }
 
-export const getBitTestCases = [
-  []
-]
+export const getBitTestCases: Map<number[], number> = new Map([
+  [[32, 4], 0],
+  [[32, 5], 1],
+  [[32, 6], 0],
+]);
 
-export const getRangeTestCases = [
-  
-]
+export const getRangeTestCases: Map<number[], number> = new Map([
+]);

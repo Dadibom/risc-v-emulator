@@ -84,15 +84,11 @@ Source: Page 137 of Volume I: RISC-V Unprivileged ISA V20191213
 
 */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.parserTestCases = exports.Parser = void 0;
-class Parser {
-    constructor() {
-    }
-    parse(instructions) {
-        return instructions;
-    }
+exports.parserTestCases = exports.parse = void 0;
+function parse(instructions) {
+    return instructions;
 }
-exports.Parser = Parser;
+exports.parse = parse;
 exports.parserTestCases = new Map([
     [['NOP'], ['ADDI x0, x0, 0']],
     [['MV x3, x5'], ['ADDI x3, x5, 0']],

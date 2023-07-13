@@ -24,7 +24,9 @@ function getBit(input, index) {
     return (input >>> index) & 0x00000001;
 }
 exports.getBit = getBit;
-exports.getBitTestCases = [
-    []
-];
-exports.getRangeTestCases = [];
+exports.getBitTestCases = new Map([
+    [[32, 4], 0],
+    [[32, 5], 1],
+    [[32, 6], 0],
+]);
+exports.getRangeTestCases = new Map([]);

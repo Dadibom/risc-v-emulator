@@ -83,16 +83,9 @@ Source: Page 137 of Volume I: RISC-V Unprivileged ISA V20191213
 
 */
 
-export class Parser {
 
-  constructor() {
-
-  }
-
-  parse(instructions: string[]): string[] {
-    return instructions;
-  }
-
+export function parse(instructions: string[]): string[] {
+  return instructions;
 }
 
 export const parserTestCases = new Map<string[], string[]>([
