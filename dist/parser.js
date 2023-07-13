@@ -1,4 +1,5 @@
-/* 
+"use strict";
+/*
 The parser's job is to translate pseudo-instructions into sequences of native assembly
 
 For example, there is no dedicated opcode/function combination for the MV instruction
@@ -53,11 +54,11 @@ CALL offset                  AUIPC x1, offset[31:12 + offset[11]
 TAIL offset                  AUIPC x6, offset[31:12] + offset[11]
                              JALR x0, offset[11:0](x6)
 
-Source: Page 139 of Volume I: RISC-V Unprivileged ISA V20191213 
+Source: Page 139 of Volume I: RISC-V Unprivileged ISA V20191213
 
 
 The parser also simplifies the job for the assembler by converting symbol names
-into the appropriate address offsets, and by converting ABI (Application Binary Interface) names 
+into the appropriate address offsets, and by converting ABI (Application Binary Interface) names
 for registers into indexed register names.
 E.g. gp -> x3
 
@@ -82,15 +83,13 @@ x28-31      t3-6           Temporaries
 Source: Page 137 of Volume I: RISC-V Unprivileged ISA V20191213
 
 */
-
-export class Parser {
-
-  constructor() {
-
-  }
-
-  parse(instructions: string[]): string[] {
-    return instructions;
-  }
-
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Parser = void 0;
+class Parser {
+    constructor() {
+    }
+    parse(instructions) {
+        return instructions;
+    }
 }
+exports.Parser = Parser;

@@ -1,1 +1,3 @@
-console.log("No test implemented");
+import { testParser, parserTestCases } from "./parserTest";
+
+testParser(parserTestCases);
