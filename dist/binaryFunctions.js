@@ -10,7 +10,7 @@ function getRange(input, upperEnd, lowerEnd) {
         return null;
     let result = input;
     if (upperEnd < 31) {
-        const bitmask = 0xFFFFFFFF << upperEnd;
+        const bitmask = 0xFFFFFFFF >>> (31 - upperEnd);
         result &= bitmask;
     }
     return result >>> lowerEnd;
@@ -29,4 +29,6 @@ exports.getBitTestCases = new Map([
     [[32, 5], 1],
     [[32, 6], 0],
 ]);
-exports.getRangeTestCases = new Map([]);
+exports.getRangeTestCases = new Map([
+    [[0xFF, 3, 0], 0xF]
+]);
