@@ -1,4 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const parserTest_1 = require("./parserTest");
-(0, parserTest_1.testParser)(parserTest_1.parserTestCases);
+const testHarness_1 = require("./testHarness");
+const parser_1 = require("../parser");
+const parser = new parser_1.Parser();
+(0, testHarness_1.testArrayFunction)(parser.parse, parser_1.parserTestCases);

@@ -84,7 +84,7 @@ Source: Page 137 of Volume I: RISC-V Unprivileged ISA V20191213
 
 */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Parser = void 0;
+exports.parserTestCases = exports.Parser = void 0;
 class Parser {
     constructor() {
     }
@@ -93,3 +93,27 @@ class Parser {
     }
 }
 exports.Parser = Parser;
+exports.parserTestCases = new Map([
+    [['NOP'], ['ADDI x0, x0, 0']],
+    [['MV x3, x5'], ['ADDI x3, x5, 0']],
+    [['MV t3, a5'], ['ADDI x28, x15, 0']],
+    [['NOT x2, x7'], ['XORI x2, x7, 0']],
+    [['NEG fp, s0'], ['SUB x8, x0, x8']],
+    [['SEQZ s3, gp'], ['SLTIU x19, x3, 1']],
+    [['SNEZ t2, ra'], ['SLTU x7, x0, x1']],
+    [['SLTZ sp, tp'], ['SLT x2, x4, x0']],
+    [['SGTZ t4, a0'], ['SLT x29, x0, x10']],
+    [['RET'], ['JALR x0, 0(x1)']],
+    [[
+            'loop:',
+            'SUB s1, s1, a3',
+            'BEQZ s1, loop'
+        ], [
+            'SUB x9, x9, x13',
+            'BEQ x9, x0, -4'
+        ]],
+    [[''], ['']],
+    [[''], ['']],
+    [[''], ['']],
+    [[''], ['']],
+]);

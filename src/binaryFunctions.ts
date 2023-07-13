@@ -25,3 +25,11 @@ export function getBit(input: number, index: number): number | null {
 
   return (input >>> index) & 0x00000001
 }
+
+export const getBitTestCases = [
+  []
+]
+
+export const getRangeTestCases = [
+  
+]

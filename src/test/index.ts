@@ -1,3 +1,5 @@
-import { testParser, parserTestCases } from "./parserTest";
+import { testArrayFunction, testFunction } from "./testHarness";
+import { Parser, parserTestCases } from "../parser";
 
-testParser(parserTestCases);
+const parser = new Parser();
+testArrayFunction(parser.parse, parserTestCases);
