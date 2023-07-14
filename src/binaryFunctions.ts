@@ -1,10 +1,14 @@
 // Returns bits from 32-bit input in specified range
-export function getRange(input: number, upperEnd: number, lowerEnd: number): number | null {
-  if (upperEnd > 31 ||
-      lowerEnd < 0 ||
-      lowerEnd > upperEnd ||
-      lowerEnd === upperEnd
-    ) return null;
+export function getRange(input: number, upperEnd: number, lowerEnd: number): number {
+  if (
+    upperEnd > 31 ||
+    lowerEnd < 0 ||
+    lowerEnd > upperEnd ||
+    lowerEnd === upperEnd
+  ) {
+    console.log("Warning: range not possible");
+    return 0;
+  }
 
   let result = input;
 
@@ -18,12 +22,37 @@ export function getRange(input: number, upperEnd: number, lowerEnd: number): num
 }
 
 // Returns specified bit from 32-bit input
-export function getBit(input: number, index: number): number | null {
-  if (index > 31 ||
-      index < 0
-    ) return null
+export function getBit(input: number, index: number): number {
+  if (
+    index > 31 ||
+    index < 0
+  ) {
+      console.log("Warning: Bit accessed out of range");
+      return 0;
+  }
 
   return (input >>> index) & 0x00000001
+}
+
+export function bitmask(input: number, upperEnd: number, lowerEnd: number, maskAs: boolean = false,): number {
+  if (
+    upperEnd > 31 ||
+    lowerEnd < 0 ||
+    lowerEnd > upperEnd ||
+    lowerEnd === upperEnd
+  ) {
+    console.log("Warning: range not possible");
+    return 0;
+  }
+
+  if (maskAs) {
+    const mask = ((0xFFFFFFFF << (31 - (upperEnd - lowerEnd))) >> (31 - upperEnd));
+    return input | ~mask;
+  } else {
+    const mask = ((0xFFFFFFFF << (31 - (upperEnd - lowerEnd))) >> (31 - upperEnd));
+    return input & mask;
+  }
+
 }
 
 export const getBitTestCases: Map<number[], number> = new Map([

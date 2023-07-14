@@ -1,4 +1,4 @@
-import { parse, parserTestCases } from "../parser";
+import { parse, parserTestCases } from "../Assembler/parser";
 import { getBit, getBitTestCases, getRange, getRangeTestCases } from "../binaryFunctions";
 
 describe('Testing Parser:', () => {
