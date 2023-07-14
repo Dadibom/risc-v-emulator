@@ -105,7 +105,7 @@ export const parserTestCases = new Map<string[], string[]>([
     'BEQZ s1, loop'
   ], [
     'SUB x9, x9, x13',
-    'BEQ x9, x0, -4'
+    'BEQ x9, x0, -2'
   ]],
   [[''], ['']],
   [[''], ['']],
