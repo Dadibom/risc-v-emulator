@@ -55,32 +55,6 @@ TAIL offset                  AUIPC x6, offset[31:12] + offset[11]
 
 Source: Page 139 of Volume I: RISC-V Unprivileged ISA V20191213 
 
-
-The parser also simplifies the job for the assembler by converting symbol names
-into the appropriate address offsets, and by converting ABI (Application Binary Interface) names 
-for registers into indexed register names.
-E.g. gp -> x3
-
-=====================================================
-===============   Register Aliases:   ===============
-=====================================================
-
-x0          zero           Hard-wired zero
-x1          ra             Return address
-x2          sp             Stack Pointer
-x3          gp             Global Pointer
-x4          tp             Thread Pointer
-x5          t0             Temporary register/Alternative link
-x6-7        t1-2           Temporary registers
-x8          s0/fp          Saved Register/Frame pointer
-x9          s1             Saved Register
-x10-11      a0-1           Function Arguments/Return value
-x12-17      a2-7           Function Arguments
-x18-27      s2-11          Saved Registers
-x28-31      t3-6           Temporaries
-
-Source: Page 137 of Volume I: RISC-V Unprivileged ISA V20191213
-
 */
 
 const pseudoInstructionConversions = new Map<string, string[]>([

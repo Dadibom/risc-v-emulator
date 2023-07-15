@@ -1,6 +1,15 @@
-import { getBit, getRange, bitmask, setRange } from "../binaryFunctions";
+import { getBit, getRange, setRange } from "../binaryFunctions";
 
-interface InstructionValues {
+export enum InstructionType {
+  R,
+  I,
+  S,
+  B,
+  U,
+  J
+}
+
+export interface InstructionValues {
   binary?: number,
   opcode?: number,
   rd?: number,
@@ -10,11 +19,15 @@ interface InstructionValues {
   func7?: number,
   shamt?: number,
   imm?: number
+
+  type?: InstructionType
 }
 
 export abstract class Instruction {
 
-  binary: number
+  binary: number;
+
+  abstract type: InstructionType;
 
   constructor(options: InstructionValues) {
 
@@ -74,8 +87,11 @@ interface HasImmediate {
 
 export class R_Type extends Instruction {
 
+  type: InstructionType;
+
   constructor(options: InstructionValues) {
     super(options);
+    this.type = InstructionType.R;
   }
 
   get rd() {
@@ -122,8 +138,11 @@ export class R_Type extends Instruction {
 
 export class I_Type extends Instruction implements HasImmediate {
 
+  type: InstructionType;
+
   constructor(options: InstructionValues) {
     super(options);
+    this.type = InstructionType.I;
 
     if (options.imm) {
       this.binary = setRange(this.binary, options.imm, 31, 20)
@@ -183,8 +202,11 @@ export class I_Type extends Instruction implements HasImmediate {
 
 export class S_Type extends Instruction implements HasImmediate {
 
+  type: InstructionType;
+
   constructor(options: InstructionValues) {
     super(options);
+    this.type = InstructionType.S;
   }
 
   get func3() {
@@ -227,8 +249,11 @@ export class S_Type extends Instruction implements HasImmediate {
 
 export class B_Type extends Instruction implements HasImmediate {
 
+  type: InstructionType;
+
   constructor(options: InstructionValues) {
     super(options);
+    this.type = InstructionType.B;
   }
 
   get func3() {
@@ -286,8 +311,11 @@ export class B_Type extends Instruction implements HasImmediate {
 
 export class U_Type extends Instruction implements HasImmediate {
 
-    constructor(options: InstructionValues) {
+  type: InstructionType;
+
+  constructor(options: InstructionValues) {
     super(options);
+    this.type = InstructionType.U;
   }
 
   get rd() {
@@ -310,8 +338,11 @@ export class U_Type extends Instruction implements HasImmediate {
 
 export class J_Type extends Instruction implements HasImmediate {
 
+  type: InstructionType;
+
   constructor(options: InstructionValues) {
     super(options);
+    this.type = InstructionType.J;
   }
 
   get rd() {
@@ -346,6 +377,8 @@ export class J_Type extends Instruction implements HasImmediate {
       (imm10_1 << 9) +
       (imm20 << 19)
     )
+
+    this.binary = setRange(this.binary, imm, 31, 12);
 
   }
 
