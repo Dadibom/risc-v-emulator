@@ -20,7 +20,7 @@ export function getRange(input: number, upperEnd: number, lowerEnd: number): num
 
 }
 
-// Sets bits from 32-bit input in specified range
+// Sets bits from 32-bit input in specified range to provided value
 export function setRange(input: number, value: number, upperEnd: number, lowerEnd: number): number {
   if (
     upperEnd > 31 ||
@@ -55,6 +55,7 @@ export function getBit(input: number, index: number): number {
   return (input >>> index) & 0x00000001
 }
 
+// Sets the specified bit to provided value in given input
 export function setBit(input: number, value: number, index: number): number {
   if (
     index > 31 ||
@@ -72,26 +73,6 @@ export function setBit(input: number, value: number, index: number): number {
     (input | (1 << index)) ^ (1 << index);
 
 }
-
-// export function bitmask(input: number, upperEnd: number, lowerEnd: number, maskAs: boolean = false,): number {
-//   if (
-//     upperEnd > 31 ||
-//     lowerEnd < 0 ||
-//     lowerEnd > upperEnd ||
-//     lowerEnd === upperEnd
-//   ) {
-//     throw new Error('Specified range not possible');
-//   }
-
-//   if (maskAs) {
-//     const mask = ((0xFFFFFFFF << (31 - (upperEnd - lowerEnd))) >> (31 - upperEnd));
-//     return input | ~mask;
-//   } else {
-//     const mask = ((0xFFFFFFFF << (31 - (upperEnd - lowerEnd))) >> (31 - upperEnd));
-//     return input & mask;
-//   }
-
-// }
 
 export const getBitTestCases: Map<number[], number> = new Map([
   [[32, 4], 0],
@@ -130,4 +111,4 @@ export const setRangeTestCases: Map<number[], number> = new Map([
   [[0, 0xFF, 7, 0], 0xFF],
   [[0, 0xFF, 15, 8], 0xFF00],
   [[0x0A0B0C0D, 0xFF, 15, 8], 0x0A0BFF0D]
-])
+]);

@@ -1,54 +1,7 @@
 import { B_Type, I_Type, Instruction, InstructionType, InstructionValues, J_Type, R_Type, S_Type, U_Type } from "./instruction";
 import { parse } from "./parser";
 
-const instructionTable = new Map<string, InstructionValues>([
-  ['lui',   { type: InstructionType.U, opcode: 0x37 }],
-  ['auipc', { type: InstructionType.U, opcode: 0x17 }],
-
-  ['jal',   { type: InstructionType.J, opcode: 0x6F }],
-  ['jalr',  { type: InstructionType.I, opcode: 0x6F, func3: 0x0 }],
-
-  ['beq',   { type: InstructionType.B, opcode: 0x63, func3: 0x0 }],
-  ['bne',   { type: InstructionType.B, opcode: 0x63, func3: 0x1 }],
-  ['blt',   { type: InstructionType.B, opcode: 0x63, func3: 0x4 }],
-  ['bge',   { type: InstructionType.B, opcode: 0x63, func3: 0x5 }],
-  ['bltu',  { type: InstructionType.B, opcode: 0x63, func3: 0x6 }],
-  ['bgeu',  { type: InstructionType.B, opcode: 0x63, func3: 0x7 }],
-
-  ['lb',    { type: InstructionType.I,  opcode: 0x03, func3: 0x0 }],
-  ['lh',    { type: InstructionType.I,  opcode: 0x03, func3: 0x1 }],
-  ['lw',    { type: InstructionType.I,  opcode: 0x03, func3: 0x2 }],
-  ['lbu',   { type: InstructionType.I,  opcode: 0x03, func3: 0x4 }],
-  ['lhu',   { type: InstructionType.I,  opcode: 0x03, func3: 0x5 }],
-
-  ['sb',    { type: InstructionType.S,  opcode: 0x23, func3: 0x0 }],
-  ['sh',    { type: InstructionType.S,  opcode: 0x23, func3: 0x1 }],
-  ['sw',    { type: InstructionType.S,  opcode: 0x23, func3: 0x2 }],
-
-  ['addi',  { type: InstructionType.I,  opcode: 0x13, func3: 0x0 }],
-  ['slti',  { type: InstructionType.I,  opcode: 0x13, func3: 0x2 }],
-  ['sltiu', { type: InstructionType.I,  opcode: 0x13, func3: 0x3 }],
-  ['xori',  { type: InstructionType.I,  opcode: 0x13, func3: 0x4 }],
-  ['ori',   { type: InstructionType.I,  opcode: 0x13, func3: 0x6 }],
-  ['andi',  { type: InstructionType.I,  opcode: 0x13, func3: 0x7 }],
-  ['slli',  { type: InstructionType.I,  opcode: 0x13, func3: 0x1, func7: 0x00 }],
-  ['srli',  { type: InstructionType.I,  opcode: 0x13, func3: 0x5, func7: 0x00 }],
-  ['srai',  { type: InstructionType.I,  opcode: 0x13, func3: 0x5, func7: 0x20 }],
-
-  ['add',   { type: InstructionType.R,  opcode: 0x33, func3: 0x0, func7: 0x00 }],
-  ['sub',   { type: InstructionType.R,  opcode: 0x33, func3: 0x0, func7: 0x20 }],
-  ['sll',   { type: InstructionType.R,  opcode: 0x33, func3: 0x1, func7: 0x00 }],
-  ['slt',   { type: InstructionType.R,  opcode: 0x33, func3: 0x2, func7: 0x00 }],
-  ['sltu',  { type: InstructionType.R,  opcode: 0x33, func3: 0x3, func7: 0x00 }],
-  ['xor',   { type: InstructionType.R,  opcode: 0x33, func3: 0x4, func7: 0x00 }],
-  ['srl',   { type: InstructionType.R,  opcode: 0x33, func3: 0x5, func7: 0x00 }],
-  ['sra',   { type: InstructionType.R,  opcode: 0x33, func3: 0x5, func7: 0x20 }],
-  ['or',    { type: InstructionType.R,  opcode: 0x33, func3: 0x6, func7: 0x00 }],
-  ['and',   { type: InstructionType.R,  opcode: 0x33, func3: 0x7, func7: 0x00 }],
-
-  ['ecall', { type: InstructionType.I,  opcode: 0x73, func3: 0x0, func7: 0x00 }],
-])
-
+// Convert a a set of assembly instructions to machine code
 export function assemble(asm: string[]): ArrayBuffer {
 
   const parsedAssembly = parse(asm);
@@ -62,6 +15,7 @@ export function assemble(asm: string[]): ArrayBuffer {
   return binary;
 }
 
+// Convert a single assembly instruction to machine code
 export function assembleLine(asm: string): Instruction {
 
   const tokens = asm.toLowerCase().replace(/,/g, '').split(' ');
@@ -151,6 +105,15 @@ Source: Page 137 of Volume I: RISC-V Unprivileged ISA V20191213
 
 */
 
+function parseRegister(registerName: string): number {
+  const registerIndex = registerTable.get(registerName);
+  if (registerIndex === undefined) {
+    throw new Error(`Register name not found in register table; Name provided: ${registerName}`);
+  }
+
+  return registerIndex;
+}
+
 const registerTable = new Map<string, number>([
   ['x0', 0],
   ['x1', 1],
@@ -221,11 +184,50 @@ const registerTable = new Map<string, number>([
 
 ])
 
-function parseRegister(registerName: string): number {
-  const registerIndex = registerTable.get(registerName);
-  if (registerIndex === undefined) {
-    throw new Error(`Register name not found in register table; Name provided: ${registerName}`);
-  }
+const instructionTable = new Map<string, InstructionValues>([
+  ['lui',   { type: InstructionType.U, opcode: 0x37 }],
+  ['auipc', { type: InstructionType.U, opcode: 0x17 }],
 
-  return registerIndex;
-}
+  ['jal',   { type: InstructionType.J, opcode: 0x6F }],
+  ['jalr',  { type: InstructionType.I, opcode: 0x6F, func3: 0x0 }],
+
+  ['beq',   { type: InstructionType.B, opcode: 0x63, func3: 0x0 }],
+  ['bne',   { type: InstructionType.B, opcode: 0x63, func3: 0x1 }],
+  ['blt',   { type: InstructionType.B, opcode: 0x63, func3: 0x4 }],
+  ['bge',   { type: InstructionType.B, opcode: 0x63, func3: 0x5 }],
+  ['bltu',  { type: InstructionType.B, opcode: 0x63, func3: 0x6 }],
+  ['bgeu',  { type: InstructionType.B, opcode: 0x63, func3: 0x7 }],
+
+  ['lb',    { type: InstructionType.I, opcode: 0x03, func3: 0x0 }],
+  ['lh',    { type: InstructionType.I, opcode: 0x03, func3: 0x1 }],
+  ['lw',    { type: InstructionType.I, opcode: 0x03, func3: 0x2 }],
+  ['lbu',   { type: InstructionType.I, opcode: 0x03, func3: 0x4 }],
+  ['lhu',   { type: InstructionType.I, opcode: 0x03, func3: 0x5 }],
+
+  ['sb',    { type: InstructionType.S, opcode: 0x23, func3: 0x0 }],
+  ['sh',    { type: InstructionType.S, opcode: 0x23, func3: 0x1 }],
+  ['sw',    { type: InstructionType.S, opcode: 0x23, func3: 0x2 }],
+
+  ['addi',  { type: InstructionType.I, opcode: 0x13, func3: 0x0 }],
+  ['slti',  { type: InstructionType.I, opcode: 0x13, func3: 0x2 }],
+  ['sltiu', { type: InstructionType.I, opcode: 0x13, func3: 0x3 }],
+  ['xori',  { type: InstructionType.I, opcode: 0x13, func3: 0x4 }],
+  ['ori',   { type: InstructionType.I, opcode: 0x13, func3: 0x6 }],
+  ['andi',  { type: InstructionType.I, opcode: 0x13, func3: 0x7 }],
+  ['slli',  { type: InstructionType.I, opcode: 0x13, func3: 0x1, func7: 0x00 }],
+  ['srli',  { type: InstructionType.I, opcode: 0x13, func3: 0x5, func7: 0x00 }],
+  ['srai',  { type: InstructionType.I, opcode: 0x13, func3: 0x5, func7: 0x20 }],
+
+  ['add',   { type: InstructionType.R, opcode: 0x33, func3: 0x0, func7: 0x00 }],
+  ['sub',   { type: InstructionType.R, opcode: 0x33, func3: 0x0, func7: 0x20 }],
+  ['sll',   { type: InstructionType.R, opcode: 0x33, func3: 0x1, func7: 0x00 }],
+  ['slt',   { type: InstructionType.R, opcode: 0x33, func3: 0x2, func7: 0x00 }],
+  ['sltu',  { type: InstructionType.R, opcode: 0x33, func3: 0x3, func7: 0x00 }],
+  ['xor',   { type: InstructionType.R, opcode: 0x33, func3: 0x4, func7: 0x00 }],
+  ['srl',   { type: InstructionType.R, opcode: 0x33, func3: 0x5, func7: 0x00 }],
+  ['sra',   { type: InstructionType.R, opcode: 0x33, func3: 0x5, func7: 0x20 }],
+  ['or',    { type: InstructionType.R, opcode: 0x33, func3: 0x6, func7: 0x00 }],
+  ['and',   { type: InstructionType.R, opcode: 0x33, func3: 0x7, func7: 0x00 }],
+
+  ['ecall', { type: InstructionType.I,  opcode: 0x73, func3: 0x0, func7: 0x00 }],
+])

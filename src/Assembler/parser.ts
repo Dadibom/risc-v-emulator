@@ -57,6 +57,12 @@ Source: Page 139 of Volume I: RISC-V Unprivileged ISA V20191213
 
 */
 
+export function parse(instructions: string[]): string[] {
+  return instructions;
+}
+
+//TODO Rewrite parsing function to work with instruction classes
+
 const pseudoInstructionConversions = new Map<string, string[]>([
   ['LA rd, symbol (Non-PIC)',      ['AUIPC rd, delta[31:12] + delta[11]',
                                     'ADDI rd, rd, delta[11:0]']],
@@ -102,11 +108,6 @@ const pseudoInstructionConversions = new Map<string, string[]>([
   ['TAIL offset        ',          ['AUIPC x6, offset[31:12] + offset[11]',
                                     'JALR x0, offset[11:0](x6)']]
 ]);
-
-
-export function parse(instructions: string[]): string[] {
-  return instructions;
-}
 
 export const parserTestCases = new Map<string[], string[]>([
   [['NOP'], ['ADDI x0, x0, 0']],

@@ -1,28 +1,5 @@
 import { getBit, getRange, setRange } from "../binaryFunctions";
 
-export enum InstructionType {
-  R,
-  I,
-  S,
-  B,
-  U,
-  J
-}
-
-export interface InstructionValues {
-  binary?: number,
-  opcode?: number,
-  rd?: number,
-  rs1?: number,
-  rs2?: number,
-  func3?: number,
-  func7?: number,
-  shamt?: number,
-  imm?: number
-
-  type?: InstructionType
-}
-
 export abstract class Instruction {
 
   binary: number;
@@ -79,10 +56,6 @@ export abstract class Instruction {
     this.binary = setRange(this.binary, value, 6, 0);
   }
 
-}
-
-interface HasImmediate {
-  imm: number,
 }
 
 export class R_Type extends Instruction {
@@ -382,4 +355,31 @@ export class J_Type extends Instruction implements HasImmediate {
 
   }
 
+}
+
+export enum InstructionType {
+  R,
+  I,
+  S,
+  B,
+  U,
+  J
+}
+
+export interface InstructionValues {
+  binary?: number,
+  opcode?: number,
+  rd?: number,
+  rs1?: number,
+  rs2?: number,
+  func3?: number,
+  func7?: number,
+  shamt?: number,
+  imm?: number
+
+  type?: InstructionType
+}
+
+interface HasImmediate {
+  imm: number,
 }
