@@ -1,4 +1,8 @@
-export declare function getRange(input: number, upperEnd: number, lowerEnd: number): number | null;
-export declare function getBit(input: number, index: number): number | null;
+export declare function getRange(input: number, upperEnd: number, lowerEnd: number): number;
+export declare function setRange(input: number, value: number, upperEnd: number, lowerEnd: number): number;
+export declare function getBit(input: number, index: number): number;
+export declare function setBit(input: number, value: number, index: number): number;
+export declare function bitmask(input: number, upperEnd: number, lowerEnd: number, maskAs?: boolean): number;
 export declare const getBitTestCases: Map<number[], number>;
+export declare const setBitTestCases: Map<number[], number>;
 export declare const getRangeTestCases: Map<number[], number>;

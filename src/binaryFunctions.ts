@@ -60,12 +60,12 @@ export function setBit(input: number, value: number, index: number): number {
   }
 
   if (value !== 0 && value !== 1) {
-    throw new Error('Specified value must be 1 or 0');
+    throw new Error(`Specified value must be 1 or 0; value received: ${value}`);
   }
 
   return value === 1 ? 
-    input | (value << index) :
-    input & (value << index);
+    input | (1 << index) :
+    (input | (1 << index)) ^ (1 << index);
 
 }
 
@@ -103,6 +103,16 @@ export const getBitTestCases: Map<number[], number> = new Map([
   [[0x80000000, 30], 0],
   [[0x80000000, 31], 1]
 ]);
+
+export const setBitTestCases: Map<number[], number> = new Map([
+  [[0, 1, 0], 1],
+  [[0, 1, 1], 2],
+  [[0, 1, 2], 4],
+  [[0, 1, 3], 8],
+  [[0, 1, 4], 16],
+  [[0, 1, 5], 32],
+  [[31, 0, 0], 30],
+])
 
 export const getRangeTestCases: Map<number[], number> = new Map([
   [[0xFF, 3, 0], 0xF],
