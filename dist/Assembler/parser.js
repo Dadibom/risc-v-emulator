@@ -59,6 +59,11 @@ Source: Page 139 of Volume I: RISC-V Unprivileged ISA V20191213
 */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.parserTestCases = exports.parse = void 0;
+function parse(instructions) {
+    return instructions;
+}
+exports.parse = parse;
+//TODO Rewrite parsing function to work with instruction classes
 const pseudoInstructionConversions = new Map([
     ['LA rd, symbol (Non-PIC)', ['AUIPC rd, delta[31:12] + delta[11]',
             'ADDI rd, rd, delta[11:0]']],
@@ -100,10 +105,6 @@ const pseudoInstructionConversions = new Map([
     ['TAIL offset        ', ['AUIPC x6, offset[31:12] + offset[11]',
             'JALR x0, offset[11:0](x6)']]
 ]);
-function parse(instructions) {
-    return instructions;
-}
-exports.parse = parse;
 exports.parserTestCases = new Map([
     [['NOP'], ['ADDI x0, x0, 0']],
     [['MV x3, x5'], ['ADDI x3, x5, 0']],

@@ -17,7 +17,7 @@ function getRange(input, upperEnd, lowerEnd) {
     return result >>> lowerEnd;
 }
 exports.getRange = getRange;
-// Sets bits from 32-bit input in specified range
+// Sets bits from 32-bit input in specified range to provided value
 function setRange(input, value, upperEnd, lowerEnd) {
     if (upperEnd > 31 ||
         lowerEnd < 0 ||
@@ -28,7 +28,6 @@ function setRange(input, value, upperEnd, lowerEnd) {
     if (value > (2 ** (1 + upperEnd - lowerEnd)) - 1) {
         throw new Error(`Value does not fit within specified range; max value: ${(2 ** (1 + upperEnd - lowerEnd)) - 1}, value supplied: ${value}`);
     }
-    //return bitmask(input, upperEnd, lowerEnd, false) | (value << lowerEnd);
     const lowerMask = 0xFFFFFFFF >>> (31 - lowerEnd);
     const upperMask = 0xFFFFFFFF << upperEnd;
     const bitMask = lowerMask | upperMask;
@@ -44,6 +43,7 @@ function getBit(input, index) {
     return (input >>> index) & 0x00000001;
 }
 exports.getBit = getBit;
+// Sets the specified bit to provided value in given input
 function setBit(input, value, index) {
     if (index > 31 ||
         index < 0) {
@@ -57,23 +57,6 @@ function setBit(input, value, index) {
         (input | (1 << index)) ^ (1 << index);
 }
 exports.setBit = setBit;
-// export function bitmask(input: number, upperEnd: number, lowerEnd: number, maskAs: boolean = false,): number {
-//   if (
-//     upperEnd > 31 ||
-//     lowerEnd < 0 ||
-//     lowerEnd > upperEnd ||
-//     lowerEnd === upperEnd
-//   ) {
-//     throw new Error('Specified range not possible');
-//   }
-//   if (maskAs) {
-//     const mask = ((0xFFFFFFFF << (31 - (upperEnd - lowerEnd))) >> (31 - upperEnd));
-//     return input | ~mask;
-//   } else {
-//     const mask = ((0xFFFFFFFF << (31 - (upperEnd - lowerEnd))) >> (31 - upperEnd));
-//     return input & mask;
-//   }
-// }
 exports.getBitTestCases = new Map([
     [[32, 4], 0],
     [[32, 5], 1],

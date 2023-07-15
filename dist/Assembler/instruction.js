@@ -1,16 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.J_Type = exports.U_Type = exports.B_Type = exports.S_Type = exports.I_Type = exports.R_Type = exports.Instruction = exports.InstructionType = void 0;
+exports.InstructionType = exports.J_Type = exports.U_Type = exports.B_Type = exports.S_Type = exports.I_Type = exports.R_Type = exports.Instruction = void 0;
 const binaryFunctions_1 = require("../binaryFunctions");
-var InstructionType;
-(function (InstructionType) {
-    InstructionType[InstructionType["R"] = 0] = "R";
-    InstructionType[InstructionType["I"] = 1] = "I";
-    InstructionType[InstructionType["S"] = 2] = "S";
-    InstructionType[InstructionType["B"] = 3] = "B";
-    InstructionType[InstructionType["U"] = 4] = "U";
-    InstructionType[InstructionType["J"] = 5] = "J";
-})(InstructionType || (exports.InstructionType = InstructionType = {}));
 class Instruction {
     constructor(options) {
         if (options.binary) {
@@ -263,3 +254,12 @@ class J_Type extends Instruction {
     }
 }
 exports.J_Type = J_Type;
+var InstructionType;
+(function (InstructionType) {
+    InstructionType[InstructionType["R"] = 0] = "R";
+    InstructionType[InstructionType["I"] = 1] = "I";
+    InstructionType[InstructionType["S"] = 2] = "S";
+    InstructionType[InstructionType["B"] = 3] = "B";
+    InstructionType[InstructionType["U"] = 4] = "U";
+    InstructionType[InstructionType["J"] = 5] = "J";
+})(InstructionType || (exports.InstructionType = InstructionType = {}));
