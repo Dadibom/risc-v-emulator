@@ -6,3 +6,4 @@ export declare function bitmask(input: number, upperEnd: number, lowerEnd: numbe
 export declare const getBitTestCases: Map<number[], number>;
 export declare const setBitTestCases: Map<number[], number>;
 export declare const getRangeTestCases: Map<number[], number>;
+export declare const setRangeTestCases: Map<number[], number>;

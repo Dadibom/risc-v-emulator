@@ -30,3 +30,10 @@ describe('Testing getRange function:', () => {
         });
     });
 });
+describe('Testing setRange function:', () => {
+    binaryFunctions_1.setRangeTestCases.forEach((expected, input) => {
+        test(`Input: ${input[0]}, ${input[1]}, ${input[2]}, ${input[3]}`, () => {
+            expect((0, binaryFunctions_1.setRange)(input[0], input[1], input[2], input[3])).toBe(expected);
+        });
+    });
+});

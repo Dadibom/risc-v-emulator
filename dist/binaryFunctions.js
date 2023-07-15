@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getRangeTestCases = exports.setBitTestCases = exports.getBitTestCases = exports.bitmask = exports.setBit = exports.getBit = exports.setRange = exports.getRange = void 0;
+exports.setRangeTestCases = exports.getRangeTestCases = exports.setBitTestCases = exports.getBitTestCases = exports.bitmask = exports.setBit = exports.getBit = exports.setRange = exports.getRange = void 0;
 // Returns bits from 32-bit input in specified range
 function getRange(input, upperEnd, lowerEnd) {
     if (upperEnd > 31 ||
@@ -25,8 +25,8 @@ function setRange(input, value, upperEnd, lowerEnd) {
         lowerEnd === upperEnd) {
         throw new Error('Specified range not possible');
     }
-    if (value >= 2 ** (upperEnd - lowerEnd)) {
-        throw new Error('Value does not fit within specified range');
+    if (value > (2 ** (1 + upperEnd - lowerEnd)) - 1) {
+        throw new Error(`Value does not fit within specified range; max value: ${(2 ** (1 + upperEnd - lowerEnd)) - 1}, value supplied: ${value}`);
     }
     return bitmask(input, upperEnd, lowerEnd) | value << lowerEnd;
 }
@@ -99,4 +99,8 @@ exports.getRangeTestCases = new Map([
     [[0xFFFFFFFF, 30, 0], 0x7FFFFFFF],
     [[0xFFFFFFFF, 12, 9], 0xF],
     [[0x0A0B0C0D, 23, 8], 0x0B0C]
+]);
+exports.setRangeTestCases = new Map([
+    [[0, 0xFF, 7, 0], 0xFF],
+    [[0, 0xFF, 15, 8], 0xFF00]
 ]);

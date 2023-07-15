@@ -31,8 +31,8 @@ export function setRange(input: number, value: number, upperEnd: number, lowerEn
     throw new Error('Specified range not possible');
   }
 
-  if (value >= 2 ** (upperEnd - lowerEnd)) {
-    throw new Error('Value does not fit within specified range');
+  if (value > (2 ** (1 + upperEnd - lowerEnd)) - 1) {
+    throw new Error(`Value does not fit within specified range; max value: ${(2 ** (1 + upperEnd - lowerEnd)) - 1}, value supplied: ${value}`);
   }
 
   return bitmask(input, upperEnd, lowerEnd) | value << lowerEnd;
@@ -121,3 +121,8 @@ export const getRangeTestCases: Map<number[], number> = new Map([
   [[0xFFFFFFFF, 12, 9], 0xF],
   [[0x0A0B0C0D, 23, 8], 0x0B0C]
 ]);
+
+export const setRangeTestCases: Map<number[], number> = new Map([
+  [[0, 0xFF, 7, 0], 0xFF],
+  [[0, 0xFF, 15, 8], 0xFF00]
+])

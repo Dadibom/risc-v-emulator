@@ -1,5 +1,5 @@
 import { parse, parserTestCases } from "../Assembler/parser";
-import { getBit, getBitTestCases, getRange, getRangeTestCases, setBit, setBitTestCases } from "../binaryFunctions";
+import { getBit, getBitTestCases, getRange, getRangeTestCases, setBit, setBitTestCases, setRange, setRangeTestCases } from "../binaryFunctions";
 
 describe('Testing Parser:', () => {
   parserTestCases.forEach((expected: string[], input: string[]) => {
@@ -29,6 +29,14 @@ describe('Testing getRange function:', () => {
   getRangeTestCases.forEach((expected: number, input: number[]) => {
     test(`Input: ${input[0]}, ${input[1]}, ${input[2]}`, () => {
       expect(getRange(input[0], input[1], input[2])).toBe(expected);
+    })
+  })
+})
+
+describe('Testing setRange function:', () => {
+  setRangeTestCases.forEach((expected: number, input: number[]) => {
+    test(`Input: ${input[0]}, ${input[1]}, ${input[2]}, ${input[3]}`, () => {
+      expect(setRange(input[0], input[1], input[2], input[3])).toBe(expected);
     })
   })
 })
