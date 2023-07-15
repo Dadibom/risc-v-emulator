@@ -6,8 +6,7 @@ export function getRange(input: number, upperEnd: number, lowerEnd: number): num
     lowerEnd > upperEnd ||
     lowerEnd === upperEnd
   ) {
-    console.log("Warning: range not possible");
-    return 0;
+    throw new Error('Specified range not possible');
   }
 
   let result = input;
@@ -21,17 +20,53 @@ export function getRange(input: number, upperEnd: number, lowerEnd: number): num
 
 }
 
+// Sets bits from 32-bit input in specified range
+export function setRange(input: number, value: number, upperEnd: number, lowerEnd: number): number {
+  if (
+    upperEnd > 31 ||
+    lowerEnd < 0 ||
+    lowerEnd > upperEnd ||
+    lowerEnd === upperEnd
+  ) {
+    throw new Error('Specified range not possible');
+  }
+
+  if (value >= 2 ** (upperEnd - lowerEnd)) {
+    throw new Error('Value does not fit within specified range');
+  }
+
+  return bitmask(input, upperEnd, lowerEnd) | value << lowerEnd;
+
+}
+
 // Returns specified bit from 32-bit input
 export function getBit(input: number, index: number): number {
   if (
     index > 31 ||
     index < 0
   ) {
-      console.log("Warning: Bit accessed out of range");
-      return 0;
+    throw new Error('Specified index not possible');
   }
 
   return (input >>> index) & 0x00000001
+}
+
+export function setBit(input: number, value: number, index: number): number {
+  if (
+    index > 31 ||
+    index < 0
+  ) {
+    throw new Error('Specified index not possible');
+  }
+
+  if (value !== 0 && value !== 1) {
+    throw new Error('Specified value must be 1 or 0');
+  }
+
+  return value === 1 ? 
+    input | (value << index) :
+    input & (value << index);
+
 }
 
 export function bitmask(input: number, upperEnd: number, lowerEnd: number, maskAs: boolean = false,): number {
@@ -41,8 +76,7 @@ export function bitmask(input: number, upperEnd: number, lowerEnd: number, maskA
     lowerEnd > upperEnd ||
     lowerEnd === upperEnd
   ) {
-    console.log("Warning: range not possible");
-    return 0;
+    throw new Error('Specified range not possible');
   }
 
   if (maskAs) {

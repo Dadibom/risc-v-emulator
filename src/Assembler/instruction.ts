@@ -1,161 +1,351 @@
-import { getBit, getRange, bitmask } from "../binaryFunctions";
+import { getBit, getRange, bitmask, setRange } from "../binaryFunctions";
+
+interface InstructionValues {
+  binary?: number,
+  opcode?: number,
+  rd?: number,
+  rs1?: number,
+  rs2?: number,
+  func3?: number,
+  func7?: number,
+  shamt?: number,
+  imm?: number
+}
 
 export abstract class Instruction {
 
-  opcode: number
+  binary: number
 
-  constructor(public binary: number) {
-    this.opcode = getRange(binary, 6, 0);
+  constructor(options: InstructionValues) {
+
+    if (options.binary) {
+      this.binary = options.binary;
+
+    } else if (options.opcode) {
+      this.binary = 0;
+
+      if (options.opcode) {
+        this.binary = setRange(this.binary, options.opcode, 6, 0);
+      }
+      
+      if (options.rd) {
+        this.binary = setRange(this.binary, options.rd, 11, 7);
+      }
+
+      if (options.rs1) {
+        this.binary = setRange(this.binary, options.rs1, 19, 15);
+      }
+
+      if (options.rs2) {
+        this.binary = setRange(this.binary, options.rs2, 24, 20);
+      }
+
+      if (options.func3) {
+        this.binary = setRange(this.binary, options.func3, 14, 12);
+      }
+
+      if (options.func7) {
+        this.binary = setRange(this.binary, options.func7, 31, 25);
+      }
+
+      if (options.shamt) {
+        this.binary = setRange(this.binary, options.shamt, 24, 20);
+      }
+
+    } else {
+      throw new Error('Instruction must be constructed with at least a binary value OR opcode value');
+    }
+
+  }
+
+  get opcode() {
+    return getRange(this.binary, 6, 0);
+  }
+
+  set opcode(value: number) {
+    this.binary = setRange(this.binary, value, 6, 0);
   }
 
 }
 
 interface HasImmediate {
-  imm: number
+  imm: number,
 }
 
 export class R_Type extends Instruction {
 
-  rd: number;
-  func3: number;
-  rs1: number;
-  rs2: number;
-  func7: number;
+  constructor(options: InstructionValues) {
+    super(options);
+  }
 
-  constructor(opcode: number) {
-    super(opcode);
+  get rd() {
+    return getRange(this.binary, 11, 6);
+  }
 
-    this.rd = getRange(this.binary, 11, 6);
-    this.func3 = getRange(this.binary, 14, 12);
-    this.rs1 = getRange(this.binary, 19, 15);
-    this.rs2 = getRange(this.binary, 24, 20);
-    this.func7 = getRange(this.binary, 31, 25);
+  set rd(value: number) {
+    this.binary = setRange(this.binary, value, 11, 6);
+  }
 
+  get func3() {
+    return getRange(this.binary, 14, 12);
+  }
+
+  set func3(value: number) {
+    this.binary = setRange(this.binary, value, 14, 12);
+  }
+
+  get rs1() {
+    return getRange(this.binary, 19, 15);
+  }
+
+  set rs1(value: number) {
+    this.binary = setRange(this.binary, value, 19, 15);
+  }
+
+  get rs2() {
+    return getRange(this.binary, 24, 20);
+  }
+
+  set rs2(value: number) {
+    this.binary = setRange(this.binary, value, 24, 20);
+  }
+
+  get func7() {
+    return getRange(this.binary, 31, 25);
+  }
+
+  set func7(value: number) {
+    this.binary = setRange(this.binary, value, 31, 25);
   }
 
 }
 
 export class I_Type extends Instruction implements HasImmediate {
 
-  rd: number
-  func3: number
-  rs1: number
-  imm12: number
-  func7: number
-  shamt: number
+  constructor(options: InstructionValues) {
+    super(options);
 
-  imm: number
+    if (options.imm) {
+      this.binary = setRange(this.binary, options.imm, 31, 20)
+    }
 
-    constructor(opcode: number) {
-    super(opcode);
+  }
 
-    this.rd = getRange(this.binary, 11, 6);
-    this.func3 = getRange(this.binary, 14, 12);
-    this.rs1 = getRange(this.binary, 19, 15);
-    this.imm12 = getRange(this.binary, 31, 20);
-    this.func7 = getRange(this.binary, 31, 25);
-    this.shamt = getRange(this.binary, 24, 20);
+  get rd() {
+    return getRange(this.binary, 11, 6);
+  }
 
-    this.imm = this.imm12;
+  set rd(value: number) {
+    this.binary = setRange(this.binary, value, 11, 6);
+  }
 
+  get func3() {
+    return getRange(this.binary, 14, 12);
+  }
+
+  set func3(value: number) {
+    this.binary = setRange(this.binary, value, 14, 12);
+  }
+
+  get rs1() {
+    return getRange(this.binary, 19, 15);
+  }
+
+  set rs1(value: number) {
+    this.binary = setRange(this.binary, value, 19, 15);
+  }
+
+  get func7() {
+    return getRange(this.binary, 31, 25);
+  }
+
+  set func7(value: number) {
+    this.binary = setRange(this.binary, value, 31, 25);
+  }
+
+  get shamt() {
+    return getRange(this.binary, 24, 20);
+  }
+
+  set shamt(value: number) {
+    this.binary = setRange(this.binary, value, 24, 20);
+  }
+
+  get imm() {
+    return getRange(this.binary, 31, 20);
+  }
+
+  set imm(value: number) {
+    this.binary = setRange(this.binary, value, 31, 20);
   }
 
 }
 
 export class S_Type extends Instruction implements HasImmediate {
 
-  imm5: number
-  func3: number
-  rs1: number
-  rs2: number
-  imm7: number
+  constructor(options: InstructionValues) {
+    super(options);
+  }
 
-  imm: number
+  get func3() {
+    return getRange(this.binary, 14, 12);
+  }
 
-    constructor(opcode: number) {
-    super(opcode);
+  set func3(value: number) {
+    this.binary = setRange(this.binary, value, 14, 12);
+  }
 
-    this.imm5 = getRange(this.binary, 11, 7);
-    this.func3 = getRange(this.binary, 14, 12);
-    this.rs1 = getRange(this.binary, 19, 15);
-    this.rs2 = getRange(this.binary, 24, 20);
-    this.imm7 = getRange(this.binary, 31, 25);
+  get rs1() {
+    return getRange(this.binary, 19, 15);
+  }
 
-    this.imm = this.imm5 + (this.imm7 << 13);
+  set rs1(value: number) {
+    this.binary = setRange(this.binary, value, 19, 15);
+  }
 
+  get rs2() {
+    return getRange(this.binary, 24, 20);
+  }
+
+  set rs2(value: number) {
+    this.binary = setRange(this.binary, value, 24, 20);
+  }
+
+  get imm() {
+    return getRange(this.binary, 11, 7) + (getRange(this.binary, 31, 25) << 13);
+  }
+
+  set imm(value: number) {
+    const imm5 = getRange(value, 4, 0);
+    const imm7 = getRange(value, 11, 5);
+
+    this.binary = setRange(this.binary, imm5, 11, 7);
+    this.binary = setRange(this.binary, imm7, 31, 25);
   }
 
 }
 
 export class B_Type extends Instruction implements HasImmediate {
 
-  imm5: number
-  func3: number
-  rs1: number
-  rs2: number
-  imm7: number
+  constructor(options: InstructionValues) {
+    super(options);
+  }
 
-  imm: number
+  get func3() {
+    return getRange(this.binary, 14, 12);
+  }
 
-    constructor(opcode: number) {
-    super(opcode);
+  set func3(value: number) {
+    this.binary = setRange(this.binary, value, 14, 12);
+  }
 
-    this.imm5 = getRange(this.binary, 11, 6);
-    this.func3 = getRange(this.binary, 14, 12);
-    this.rs1 = getRange(this.binary, 19, 15);
-    this.rs2 = getRange(this.binary, 24, 20);
-    this.imm7 = getRange(this.binary, 31, 25);
+  get rs1() {
+    return getRange(this.binary, 19, 15);
+  }
 
-    this.imm = (
-      (getRange(this.imm5, 4, 1) << 1) +
-      (getBit(this.imm5, 0) << 11) +
-      (getRange(this.imm7, 5, 0) << 5) +
-      (getBit(this.imm7, 6) << 12)
+  set rs1(value: number) {
+    this.binary = setRange(this.binary, value, 19, 15);
+  }
+
+  get rs2() {
+    return getRange(this.binary, 24, 20);
+  }
+
+  set rs2(value: number) {
+    this.binary = setRange(this.binary, value, 24, 20);
+  }
+
+  get imm() {
+
+    const imm5 = getRange(this.binary, 11, 7);
+    const imm7 = getRange(this.binary, 31, 25);
+
+    return (
+      (getRange(imm5, 4, 1) << 1) +
+      (getBit(imm5, 0) << 11) +
+      (getRange(imm7, 5, 0) << 5) +
+      (getBit(imm7, 6) << 12)
     )
+  }
 
+  set imm(value: number) {
+
+    const imm4_1 = getRange(value, 4, 1);
+    const imm10_5 = getRange(value, 10, 5);
+    const imm11 = getBit(value, 11);
+    const imm12 = getBit(value, 12);
+
+    const imm5 = (imm4_1 << 1) + imm11;
+    const imm7 = (imm12 << 6) + imm10_5;
+
+    this.binary = setRange(this.binary, imm5, 11, 7);
+    this.binary = setRange(this.binary, imm7, 31, 25);
   }
 
 }
 
 export class U_Type extends Instruction implements HasImmediate {
 
-  rd: number
-  imm20: number
+    constructor(options: InstructionValues) {
+    super(options);
+  }
 
-  imm: number
+  get rd() {
+    return getRange(this.binary, 11, 6);
+  }
 
-    constructor(opcode: number) {
-    super(opcode);
+  set rd(value: number) {
+    this.binary = setRange(this.binary, value, 11, 6);
+  }
 
-    this.rd = getRange(this.binary, 11, 6);
-    this.imm20 = getRange(this.binary, 31, 12);
+  get imm() {
+    return getRange(this.binary, 31, 12) << 12;
+  }
 
-    this.imm = bitmask(this.binary, 31, 12);
-
+  set imm(value: number) {
+    this.binary = setRange(this.binary, value >> 12, 31, 12);
   }
 
 }
 
 export class J_Type extends Instruction implements HasImmediate {
 
-  rd: number
-  imm20: number
+  constructor(options: InstructionValues) {
+    super(options);
+  }
 
-  imm: number
+  get rd() {
+    return getRange(this.binary, 11, 6);;
+  }
 
-    constructor(opcode: number) {
-    super(opcode);
+  set rd(value: number) {
+    this.binary = setRange(this.binary, value, 11, 6);
+  }
 
-    this.rd = getRange(this.binary, 11, 6);
-    this.imm20 = getRange(this.binary, 31, 12);
+  get imm() {
 
-    let imm = this.imm20;
-    this.imm = (
+    const imm = getRange(this.binary, 31, 12);
+
+    return (
       (getRange(imm, 18, 9) << 1) +
       (getBit(imm, 8) << 11) +
-      (getRange(imm, 7, 2) << 12) +
+      (getRange(imm, 7, 0) << 12) +
       (getBit(imm, 19) << 20)
     );
+  }
+
+  set imm(value: number) {
+    const imm10_1 = getRange(value, 10, 1);
+    const imm19_12 = getRange(value, 19, 12);
+    const imm11 = getBit(value, 11);
+    const imm20 = getBit(value, 20);
+
+    const imm = (
+      imm19_12 +
+      (imm11 << 8) +
+      (imm10_1 << 9) +
+      (imm20 << 19)
+    )
 
   }
 
