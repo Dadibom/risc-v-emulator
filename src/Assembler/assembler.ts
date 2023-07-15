@@ -64,7 +64,7 @@ export function assemble(asm: string[]): ArrayBuffer {
 
 export function assembleLine(asm: string): Instruction {
 
-  const tokens = asm.replace(',', '').split(' ');
+  const tokens = asm.toLowerCase().replace(/,/g, '').split(' ');
   const baseValues = instructionTable.get(tokens[0]);
 
   if (baseValues === undefined) {

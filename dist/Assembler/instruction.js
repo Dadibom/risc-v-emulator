@@ -1,7 +1,16 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.J_Type = exports.U_Type = exports.B_Type = exports.S_Type = exports.I_Type = exports.R_Type = exports.Instruction = void 0;
+exports.J_Type = exports.U_Type = exports.B_Type = exports.S_Type = exports.I_Type = exports.R_Type = exports.Instruction = exports.InstructionType = void 0;
 const binaryFunctions_1 = require("../binaryFunctions");
+var InstructionType;
+(function (InstructionType) {
+    InstructionType[InstructionType["R"] = 0] = "R";
+    InstructionType[InstructionType["I"] = 1] = "I";
+    InstructionType[InstructionType["S"] = 2] = "S";
+    InstructionType[InstructionType["B"] = 3] = "B";
+    InstructionType[InstructionType["U"] = 4] = "U";
+    InstructionType[InstructionType["J"] = 5] = "J";
+})(InstructionType || (exports.InstructionType = InstructionType = {}));
 class Instruction {
     constructor(options) {
         if (options.binary) {
@@ -46,6 +55,7 @@ exports.Instruction = Instruction;
 class R_Type extends Instruction {
     constructor(options) {
         super(options);
+        this.type = InstructionType.R;
     }
     get rd() {
         return (0, binaryFunctions_1.getRange)(this.binary, 11, 6);
@@ -82,6 +92,7 @@ exports.R_Type = R_Type;
 class I_Type extends Instruction {
     constructor(options) {
         super(options);
+        this.type = InstructionType.I;
         if (options.imm) {
             this.binary = (0, binaryFunctions_1.setRange)(this.binary, options.imm, 31, 20);
         }
@@ -127,6 +138,7 @@ exports.I_Type = I_Type;
 class S_Type extends Instruction {
     constructor(options) {
         super(options);
+        this.type = InstructionType.S;
     }
     get func3() {
         return (0, binaryFunctions_1.getRange)(this.binary, 14, 12);
@@ -160,6 +172,7 @@ exports.S_Type = S_Type;
 class B_Type extends Instruction {
     constructor(options) {
         super(options);
+        this.type = InstructionType.B;
     }
     get func3() {
         return (0, binaryFunctions_1.getRange)(this.binary, 14, 12);
@@ -202,6 +215,7 @@ exports.B_Type = B_Type;
 class U_Type extends Instruction {
     constructor(options) {
         super(options);
+        this.type = InstructionType.U;
     }
     get rd() {
         return (0, binaryFunctions_1.getRange)(this.binary, 11, 6);
@@ -220,6 +234,7 @@ exports.U_Type = U_Type;
 class J_Type extends Instruction {
     constructor(options) {
         super(options);
+        this.type = InstructionType.J;
     }
     get rd() {
         return (0, binaryFunctions_1.getRange)(this.binary, 11, 6);
@@ -244,6 +259,7 @@ class J_Type extends Instruction {
             (imm11 << 8) +
             (imm10_1 << 9) +
             (imm20 << 19));
+        this.binary = (0, binaryFunctions_1.setRange)(this.binary, imm, 31, 12);
     }
 }
 exports.J_Type = J_Type;

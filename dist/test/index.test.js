@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const assembler_1 = require("../Assembler/assembler");
 const parser_1 = require("../Assembler/parser");
 const binaryFunctions_1 = require("../binaryFunctions");
 describe('Testing Parser:', () => {
@@ -35,5 +36,13 @@ describe('Testing setRange function:', () => {
         test(`Input: ${input[0]}, ${input[1]}, ${input[2]}, ${input[3]}`, () => {
             expect((0, binaryFunctions_1.setRange)(input[0], input[1], input[2], input[3])).toBe(expected);
         });
+    });
+});
+describe('Testing assembleLine function:', () => {
+    test('Input: addi, x17, x0, 93', () => {
+        expect((0, assembler_1.assembleLine)('addi, x17, x0, 93')).toHaveProperty('binary', 0x05D00893);
+    });
+    test('Input: add fp, a2, t4', () => {
+        expect((0, assembler_1.assembleLine)('add fp, a2, t4')).toHaveProperty('binary', 0x01D60433);
     });
 });

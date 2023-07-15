@@ -35,7 +35,11 @@ export function setRange(input: number, value: number, upperEnd: number, lowerEn
     throw new Error(`Value does not fit within specified range; max value: ${(2 ** (1 + upperEnd - lowerEnd)) - 1}, value supplied: ${value}`);
   }
 
-  return bitmask(input, upperEnd, lowerEnd) | value << lowerEnd;
+  const lowerMask = 0xFFFFFFFF >>> (31 - lowerEnd);
+  const upperMask = 0xFFFFFFFF << upperEnd;
+  const bitMask = lowerMask | upperMask;
+
+  return (input & bitMask) | (value << lowerEnd);
 
 }
 
@@ -69,25 +73,25 @@ export function setBit(input: number, value: number, index: number): number {
 
 }
 
-export function bitmask(input: number, upperEnd: number, lowerEnd: number, maskAs: boolean = false,): number {
-  if (
-    upperEnd > 31 ||
-    lowerEnd < 0 ||
-    lowerEnd > upperEnd ||
-    lowerEnd === upperEnd
-  ) {
-    throw new Error('Specified range not possible');
-  }
+// export function bitmask(input: number, upperEnd: number, lowerEnd: number, maskAs: boolean = false,): number {
+//   if (
+//     upperEnd > 31 ||
+//     lowerEnd < 0 ||
+//     lowerEnd > upperEnd ||
+//     lowerEnd === upperEnd
+//   ) {
+//     throw new Error('Specified range not possible');
+//   }
 
-  if (maskAs) {
-    const mask = ((0xFFFFFFFF << (31 - (upperEnd - lowerEnd))) >> (31 - upperEnd));
-    return input | ~mask;
-  } else {
-    const mask = ((0xFFFFFFFF << (31 - (upperEnd - lowerEnd))) >> (31 - upperEnd));
-    return input & mask;
-  }
+//   if (maskAs) {
+//     const mask = ((0xFFFFFFFF << (31 - (upperEnd - lowerEnd))) >> (31 - upperEnd));
+//     return input | ~mask;
+//   } else {
+//     const mask = ((0xFFFFFFFF << (31 - (upperEnd - lowerEnd))) >> (31 - upperEnd));
+//     return input & mask;
+//   }
 
-}
+// }
 
 export const getBitTestCases: Map<number[], number> = new Map([
   [[32, 4], 0],
@@ -124,5 +128,6 @@ export const getRangeTestCases: Map<number[], number> = new Map([
 
 export const setRangeTestCases: Map<number[], number> = new Map([
   [[0, 0xFF, 7, 0], 0xFF],
-  [[0, 0xFF, 15, 8], 0xFF00]
+  [[0, 0xFF, 15, 8], 0xFF00],
+  [[0x0A0B0C0D, 0xFF, 15, 8], 0x0A0BFF0D]
 ])
