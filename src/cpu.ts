@@ -253,66 +253,104 @@ const opcode0x23func3Table: FuncTable<S_Type> = new Map([
 const opcode0x33func3Table: FuncTable<R_Type> = new Map([
   [0x0, (instruction: R_Type, cpu: CPU) => {
     const { rd, rs1, rs2, func7 } = instruction;
+    const { registerSet } = cpu;
+
+    const rs1Value = registerSet.getRegister(rs1);
+    const rs2Value = registerSet.getRegister(rs2);
 
     if (func7 === 0x00) {
-      // TODO: Implement ADD
+      const sum = rs1Value + rs2Value;
+      registerSet.setRegister(rd, sum);
+
     } else if (func7 === 0x20) {
-      // TODO: Implement SUB
+      const difference = registerSet.getRegister(rs1) - registerSet.getRegister(rs2);
+      registerSet.setRegister(rd, difference);
     }
 
   }],
 
   [0x1, (instruction: R_Type, cpu: CPU) => {
     const { rd, rs1, rs2 } = instruction;
+    const { registerSet } = cpu;
 
-    // TODO: Implement SLL
+    const rs1Value = registerSet.getRegister(rs1);
+    const rs2Value = registerSet.getRegister(rs2);
 
+    const result = rs1Value << rs2Value;
+    registerSet.setRegister(rd, result);
   }],
 
   [0x2, (instruction: R_Type, cpu: CPU) => {
     const { rd, rs1, rs2 } = instruction;
+    const { registerSet } = cpu;
 
-    // TODO: Implement SLT
+    const rs1Value = registerSet.getRegister(rs1);
+    const rs2Value = registerSet.getRegister(rs2);
 
+    const result = rs1Value < rs2Value ? 1 : 0;
+    registerSet.setRegister(rd, result);
   }],
 
   [0x3, (instruction: R_Type, cpu: CPU) => {
     const { rd, rs1, rs2 } = instruction;
+    const { registerSet } = cpu;
 
-    // TODO: Implement SLTU
+    const rs1Value = registerSet.getRegisterU(rs1);
+    const rs2Value = registerSet.getRegisterU(rs2);
 
+    const result = rs1Value < rs2Value ? 1 : 0;
+    registerSet.setRegister(rd, result);
   }],
 
   [0x4, (instruction: R_Type, cpu: CPU) => {
     const { rd, rs1, rs2 } = instruction;
+    const { registerSet } = cpu;
 
-    // TODO: Implement XOR
+    const rs1Value = registerSet.getRegister(rs1);
+    const rs2Value = registerSet.getRegister(rs2);
 
+    const result = rs1Value ^ rs2Value;
+    registerSet.setRegister(rd, result);
   }],
 
   [0x5, (instruction: R_Type, cpu: CPU) => {
     const { rd, rs1, rs2, func7 } = instruction;
+    const { registerSet } = cpu;
+
+    const rs1Value = registerSet.getRegister(rs1);
+    const rs2Value = registerSet.getRegister(rs2);
 
     if (func7 === 0x00) {
-      // TODO: Implement SRL
+      const result = rs1Value >>> rs2Value;
+      registerSet.setRegister(rd, result);
+
     } else if (func7 === 0x20) {
-      // TODO: Implement SRA
+      const result = rs1Value >> rs2Value;
+      registerSet.setRegister(rd, result);
     }
 
   }],
 
   [0x6, (instruction: R_Type, cpu: CPU) => {
     const { rd, rs1, rs2 } = instruction;
+    const { registerSet } = cpu;
 
-    // TODO: Implement OR
+    const rs1Value = registerSet.getRegister(rs1);
+    const rs2Value = registerSet.getRegister(rs2);
 
+    const result = rs1Value | rs2Value;
+    registerSet.setRegister(rd, result);
   }],
 
   [0x7, (instruction: R_Type, cpu: CPU) => {
     const { rd, rs1, rs2 } = instruction;
+    const { registerSet } = cpu;
 
-    // TODO: Implement AND
+    const rs1Value = registerSet.getRegister(rs1);
+    const rs2Value = registerSet.getRegister(rs2);
 
+    const result = rs1Value & rs2Value;
+    registerSet.setRegister(rd, result);
   }],
 
 ]);
