@@ -188,48 +188,58 @@ type FuncTable<T extends Instruction> = Map<number, (instruction: T, cpu: CPU) =
 
 const opcode0x03func3Table: FuncTable<I_Type> = new Map([
   [0x0, (instruction: I_Type, cpu: CPU) => {
-    const { registerSet, ram, pc } = cpu;
+    const { registerSet, ram } = cpu;
     const { rd, rs1, imm } = instruction;
     const rs1Value = registerSet.getRegister(rs1);
 
     const byte = ram.getInt8(rs1Value + imm);
     registerSet.setRegister(rd, byte);
+
+    cpu.pc += 4;
   }],
 
   [0x1, (instruction: I_Type, cpu: CPU) => {
-    const { registerSet, ram, pc } = cpu;
+    const { registerSet, ram } = cpu;
     const { rd, rs1, imm } = instruction;
     const rs1Value = registerSet.getRegister(rs1);
 
-    const byte = ram.getInt16(rs1Value + imm);
-    registerSet.setRegister(rd, byte);
+    const half = ram.getInt16(rs1Value + imm);
+    registerSet.setRegister(rd, half);
+
+    cpu.pc += 4;
   }],
 
   [0x2, (instruction: I_Type, cpu: CPU) => {
-    const { registerSet, ram, pc } = cpu;
+    const { registerSet, ram } = cpu;
     const { rd, rs1, imm } = instruction;
     const rs1Value = registerSet.getRegister(rs1);
 
-    const byte = ram.getInt32(rs1Value + imm);
-    registerSet.setRegister(rd, byte);
+    const word = ram.getInt32(rs1Value + imm);
+    registerSet.setRegister(rd, word);
+
+    cpu.pc += 4;
   }],
 
   [0x4, (instruction: I_Type, cpu: CPU) => {
-    const { registerSet, ram, pc } = cpu;
+    const { registerSet, ram } = cpu;
     const { rd, rs1, imm } = instruction;
     const rs1Value = registerSet.getRegister(rs1);
 
     const byte = ram.getUint8(rs1Value + imm);
     registerSet.setRegister(rd, byte);
+
+    cpu.pc += 4;
   }],
 
   [0x5, (instruction: I_Type, cpu: CPU) => {
-    const { registerSet, ram, pc } = cpu;
+    const { registerSet, ram } = cpu;
     const { rd, rs1, imm } = instruction;
     const rs1Value = registerSet.getRegister(rs1);
 
-    const byte = ram.getUint16(rs1Value + imm);
-    registerSet.setRegister(rd, byte);
+    const half = ram.getUint16(rs1Value + imm);
+    registerSet.setRegister(rd, half);
+
+    cpu.pc += 4;
   }],
 ]);
 
@@ -277,23 +287,36 @@ const opcode0x13func3Table: FuncTable<I_Type> = new Map([
 const opcode0x23func3Table: FuncTable<S_Type> = new Map([
   [0x0, (instruction: S_Type, cpu: CPU) => {
     const { rs1, rs2, imm } = instruction;
+    const { registerSet, ram } = cpu;
 
-    // TODO: Implement SB
+    const rs1Value = registerSet.getRegister(rs1);
+    const rs2Value = registerSet.getRegister(rs2);
 
+    const byte = getRange(rs2Value, 7, 0);
+
+    ram.setInt8(rs1Value + imm, byte);
   }],
 
   [0x1, (instruction: S_Type, cpu: CPU) => {
     const { rs1, rs2, imm } = instruction;
+    const { registerSet, ram } = cpu;
 
-    // TODO: Implement SH
+    const rs1Value = registerSet.getRegister(rs1);
+    const rs2Value = registerSet.getRegister(rs2);
 
+    const half = getRange(rs2Value, 15, 0);
+
+    ram.setInt16(rs1Value + imm, half);
   }],
 
   [0x2, (instruction: S_Type, cpu: CPU) => {
     const { rs1, rs2, imm } = instruction;
+    const { registerSet, ram } = cpu;
 
-    // TODO: Implement SW
+    const rs1Value = registerSet.getRegister(rs1);
+    const rs2Value = registerSet.getRegister(rs2);
 
+    ram.setInt32(rs1Value + imm, rs2Value);
   }],
 ]);
 
