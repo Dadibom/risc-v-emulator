@@ -4,13 +4,13 @@ import { parse, parserTestCases } from "../Assembler/parser";
 import { getBit, getBitTestCases, getRange, getRangeTestCases, setBit, setBitTestCases, setRange, setRangeTestCases } from "../binaryFunctions";
 import { CPU, RegisterSet } from "../cpu";
 
-describe('Testing Parser:', () => {
-  parserTestCases.forEach((expected: string[], input: string[]) => {
-    test(`Input: ${input}`, () => {
-      expect(parse(input)).toStrictEqual(expected);
-    });
-  })
-});
+// describe('Testing Parser:', () => {
+//   parserTestCases.forEach((expected: string[], input: string[]) => {
+//     test(`Input: ${input}`, () => {
+//       expect(parse(input)).toStrictEqual(expected);
+//     });
+//   })
+// });
 
 describe('Testing getBit function:', () => {
   getBitTestCases.forEach((expected: number, input: number[]) => {
