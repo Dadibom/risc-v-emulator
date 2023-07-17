@@ -2,14 +2,18 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.assembleLine = exports.assemble = void 0;
 const instruction_1 = require("./instruction");
-const parser_1 = require("./parser");
 // Convert a a set of assembly instructions to machine code
 function assemble(asm) {
-    const parsedAssembly = (0, parser_1.parse)(asm);
+    //const parsedAssembly = parse(asm);
     // TODO: link symbols, labels, sections, files etc.
-    const binary = new ArrayBuffer(parsedAssembly.length * 4);
-    // TODO: actually convert assembly into binary values
-    return binary;
+    const parsedAssembly = asm;
+    const binaryBuffer = new ArrayBuffer(parsedAssembly.length * 4);
+    const binView = new DataView(binaryBuffer);
+    parsedAssembly.forEach((line, index) => {
+        const machineCode = assembleLine(line);
+        binView.setInt32(index * 4, machineCode.binary, true);
+    });
+    return binaryBuffer;
 }
 exports.assemble = assemble;
 // Convert a single assembly instruction to machine code

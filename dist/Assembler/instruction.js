@@ -85,7 +85,7 @@ class I_Type extends Instruction {
         super(options);
         this.type = InstructionType.I;
         if (options.imm) {
-            this.binary = (0, binaryFunctions_1.setRange)(this.binary, options.imm, 31, 20);
+            this.imm = options.imm;
         }
     }
     get rd() {
@@ -119,6 +119,9 @@ class I_Type extends Instruction {
         this.binary = (0, binaryFunctions_1.setRange)(this.binary, value, 24, 20);
     }
     get imm() {
+        return (0, binaryFunctions_1.signExtend)(this.immU, 12);
+    }
+    get immU() {
         return (0, binaryFunctions_1.getRange)(this.binary, 31, 20);
     }
     set imm(value) {
@@ -130,6 +133,9 @@ class S_Type extends Instruction {
     constructor(options) {
         super(options);
         this.type = InstructionType.S;
+        if (options.imm) {
+            this.imm = options.imm;
+        }
     }
     get func3() {
         return (0, binaryFunctions_1.getRange)(this.binary, 14, 12);
@@ -150,6 +156,9 @@ class S_Type extends Instruction {
         this.binary = (0, binaryFunctions_1.setRange)(this.binary, value, 24, 20);
     }
     get imm() {
+        return (0, binaryFunctions_1.signExtend)(this.immU, 12);
+    }
+    get immU() {
         return (0, binaryFunctions_1.getRange)(this.binary, 11, 7) + ((0, binaryFunctions_1.getRange)(this.binary, 31, 25) << 13);
     }
     set imm(value) {
@@ -164,6 +173,9 @@ class B_Type extends Instruction {
     constructor(options) {
         super(options);
         this.type = InstructionType.B;
+        if (options.imm) {
+            this.imm = options.imm;
+        }
     }
     get func3() {
         return (0, binaryFunctions_1.getRange)(this.binary, 14, 12);
@@ -184,6 +196,9 @@ class B_Type extends Instruction {
         this.binary = (0, binaryFunctions_1.setRange)(this.binary, value, 24, 20);
     }
     get imm() {
+        return (0, binaryFunctions_1.signExtend)(this.immU, 13);
+    }
+    get immU() {
         const imm5 = (0, binaryFunctions_1.getRange)(this.binary, 11, 7);
         const imm7 = (0, binaryFunctions_1.getRange)(this.binary, 31, 25);
         return (((0, binaryFunctions_1.getRange)(imm5, 4, 1) << 1) +
@@ -207,6 +222,9 @@ class U_Type extends Instruction {
     constructor(options) {
         super(options);
         this.type = InstructionType.U;
+        if (options.imm) {
+            this.imm = options.imm;
+        }
     }
     get rd() {
         return (0, binaryFunctions_1.getRange)(this.binary, 11, 7);
@@ -215,6 +233,9 @@ class U_Type extends Instruction {
         this.binary = (0, binaryFunctions_1.setRange)(this.binary, value, 11, 7);
     }
     get imm() {
+        return (0, binaryFunctions_1.signExtend)(this.immU, 20);
+    }
+    get immU() {
         return (0, binaryFunctions_1.getRange)(this.binary, 31, 12) << 12;
     }
     set imm(value) {
@@ -226,6 +247,9 @@ class J_Type extends Instruction {
     constructor(options) {
         super(options);
         this.type = InstructionType.J;
+        if (options.imm) {
+            this.imm = options.imm;
+        }
     }
     get rd() {
         return (0, binaryFunctions_1.getRange)(this.binary, 11, 7);
@@ -235,6 +259,9 @@ class J_Type extends Instruction {
         this.binary = (0, binaryFunctions_1.setRange)(this.binary, value, 11, 7);
     }
     get imm() {
+        return (0, binaryFunctions_1.signExtend)(this.immU, 21);
+    }
+    get immU() {
         const imm = (0, binaryFunctions_1.getRange)(this.binary, 31, 12);
         return (((0, binaryFunctions_1.getRange)(imm, 18, 9) << 1) +
             ((0, binaryFunctions_1.getBit)(imm, 8) << 11) +

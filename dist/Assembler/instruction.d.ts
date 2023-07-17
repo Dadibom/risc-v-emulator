@@ -33,6 +33,7 @@ export declare class I_Type extends Instruction implements HasImmediate {
     get shamt(): number;
     set shamt(value: number);
     get imm(): number;
+    get immU(): number;
     set imm(value: number);
 }
 export declare class S_Type extends Instruction implements HasImmediate {
@@ -45,6 +46,7 @@ export declare class S_Type extends Instruction implements HasImmediate {
     get rs2(): number;
     set rs2(value: number);
     get imm(): number;
+    get immU(): number;
     set imm(value: number);
 }
 export declare class B_Type extends Instruction implements HasImmediate {
@@ -57,6 +59,7 @@ export declare class B_Type extends Instruction implements HasImmediate {
     get rs2(): number;
     set rs2(value: number);
     get imm(): number;
+    get immU(): number;
     set imm(value: number);
 }
 export declare class U_Type extends Instruction implements HasImmediate {
@@ -65,6 +68,7 @@ export declare class U_Type extends Instruction implements HasImmediate {
     get rd(): number;
     set rd(value: number);
     get imm(): number;
+    get immU(): number;
     set imm(value: number);
 }
 export declare class J_Type extends Instruction implements HasImmediate {
@@ -73,6 +77,7 @@ export declare class J_Type extends Instruction implements HasImmediate {
     get rd(): number;
     set rd(value: number);
     get imm(): number;
+    get immU(): number;
     set imm(value: number);
 }
 export declare enum InstructionType {
@@ -97,5 +102,6 @@ export interface InstructionValues {
 }
 interface HasImmediate {
     imm: number;
+    immU: number;
 }
 export {};

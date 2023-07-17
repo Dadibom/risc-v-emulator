@@ -9,6 +9,11 @@ export class CPU {
   constructor(ram: ArrayBuffer, public pc: number) {
     this.ram = new DataView(ram);
   }
+
+  executionStep() {
+    const instruction = this.ram.getInt32(this.pc, true);
+    this.executeInstruction(instruction);
+  }
   
   executeInstruction(instruction: number) {
 

@@ -1,8 +1,9 @@
 export declare class CPU {
-    ram: ArrayBuffer;
-    instructionPointer: number;
+    pc: number;
     registerSet: RegisterSet;
-    constructor(ram: ArrayBuffer, instructionPointer: number);
+    ram: DataView;
+    constructor(ram: ArrayBuffer, pc: number);
+    executionStep(): void;
     executeInstruction(instruction: number): void;
     private executeR_Type;
     private executeI_Type;

@@ -118,7 +118,7 @@ export class I_Type extends Instruction implements HasImmediate {
     this.type = InstructionType.I;
 
     if (options.imm) {
-      this.binary = setRange(this.binary, options.imm, 31, 20)
+      this.imm = options.imm;
     }
 
   }
@@ -184,6 +184,10 @@ export class S_Type extends Instruction implements HasImmediate {
   constructor(options: InstructionValues) {
     super(options);
     this.type = InstructionType.S;
+
+    if (options.imm) {
+      this.imm = options.imm;
+    }
   }
 
   get func3() {
@@ -235,6 +239,10 @@ export class B_Type extends Instruction implements HasImmediate {
   constructor(options: InstructionValues) {
     super(options);
     this.type = InstructionType.B;
+
+    if (options.imm) {
+      this.imm = options.imm;
+    }
   }
 
   get func3() {
@@ -301,6 +309,10 @@ export class U_Type extends Instruction implements HasImmediate {
   constructor(options: InstructionValues) {
     super(options);
     this.type = InstructionType.U;
+
+    if (options.imm) {
+      this.imm = options.imm;
+    }
   }
 
   get rd() {
@@ -332,6 +344,10 @@ export class J_Type extends Instruction implements HasImmediate {
   constructor(options: InstructionValues) {
     super(options);
     this.type = InstructionType.J;
+
+    if (options.imm) {
+      this.imm = options.imm;
+    }
   }
 
   get rd() {

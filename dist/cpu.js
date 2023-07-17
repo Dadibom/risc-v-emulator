@@ -4,10 +4,14 @@ exports.RegisterSet = exports.CPU = void 0;
 const instruction_1 = require("./Assembler/instruction");
 const binaryFunctions_1 = require("./binaryFunctions");
 class CPU {
-    constructor(ram, instructionPointer) {
-        this.ram = ram;
-        this.instructionPointer = instructionPointer;
+    constructor(ram, pc) {
+        this.pc = pc;
         this.registerSet = new RegisterSet(32);
+        this.ram = new DataView(ram);
+    }
+    executionStep() {
+        const instruction = this.ram.getInt32(this.pc, true);
+        this.executeInstruction(instruction);
     }
     executeInstruction(instruction) {
         const instructionType = opcodeTypeTable.get((0, binaryFunctions_1.getRange)(instruction, 6, 0));
@@ -43,7 +47,7 @@ class CPU {
         else {
             console.log('WARNING: Invalid Instruction');
         }
-        this.instructionPointer += 4;
+        this.pc += 4;
     }
     executeI_Type(instruction) {
         const { opcode, func3 } = instruction;
@@ -68,7 +72,7 @@ class CPU {
         else {
             console.log('WARNING: Invalid Instruction');
         }
-        this.instructionPointer += 4;
+        this.pc += 4;
     }
     executeB_Type(instruction) {
         const { opcode, func3 } = instruction;
@@ -92,7 +96,7 @@ class CPU {
         else {
             console.log('WARNING: Invalid Instruction');
         }
-        this.instructionPointer += 4;
+        this.pc += 4;
     }
     executeJ_Type(instruction) {
         const { opcode } = instruction;
@@ -140,65 +144,141 @@ class RegisterSet {
 exports.RegisterSet = RegisterSet;
 const opcode0x03func3Table = new Map([
     [0x0, (instruction, cpu) => {
-            // TODO: Implement LB
+            const { registerSet, ram } = cpu;
+            const { rd, rs1, imm } = instruction;
+            const rs1Value = registerSet.getRegister(rs1);
+            const byte = ram.getInt8(rs1Value + imm);
+            registerSet.setRegister(rd, byte);
+            cpu.pc += 4;
         }],
     [0x1, (instruction, cpu) => {
-            // TODO: Implement LH
+            const { registerSet, ram } = cpu;
+            const { rd, rs1, imm } = instruction;
+            const rs1Value = registerSet.getRegister(rs1);
+            const half = ram.getInt16(rs1Value + imm);
+            registerSet.setRegister(rd, half);
+            cpu.pc += 4;
         }],
     [0x2, (instruction, cpu) => {
-            // TODO: Implement LW
+            const { registerSet, ram } = cpu;
+            const { rd, rs1, imm } = instruction;
+            const rs1Value = registerSet.getRegister(rs1);
+            const word = ram.getInt32(rs1Value + imm);
+            registerSet.setRegister(rd, word);
+            cpu.pc += 4;
         }],
     [0x4, (instruction, cpu) => {
-            // TODO: Implement LBU
+            const { registerSet, ram } = cpu;
+            const { rd, rs1, imm } = instruction;
+            const rs1Value = registerSet.getRegister(rs1);
+            const byte = ram.getUint8(rs1Value + imm);
+            registerSet.setRegister(rd, byte);
+            cpu.pc += 4;
         }],
     [0x5, (instruction, cpu) => {
-            // TODO: Implement LHU
+            const { registerSet, ram } = cpu;
+            const { rd, rs1, imm } = instruction;
+            const rs1Value = registerSet.getRegister(rs1);
+            const half = ram.getUint16(rs1Value + imm);
+            registerSet.setRegister(rd, half);
+            cpu.pc += 4;
         }],
 ]);
 const opcode0x13func3Table = new Map([
     [0x0, (instruction, cpu) => {
-            // TODO: Implement ADDI
+            const { rd, rs1, imm } = instruction;
+            const { registerSet } = cpu;
+            const rs1Value = registerSet.getRegister(rs1);
+            const result = rs1Value + imm;
+            registerSet.setRegister(rd, result);
+            cpu.pc += 4;
         }],
     [0x1, (instruction, cpu) => {
-            // TODO: Implement SLLI
+            const { rd, rs1, shamt } = instruction;
+            const { registerSet } = cpu;
+            const rs1Value = registerSet.getRegister(rs1);
+            const result = rs1Value << shamt;
+            registerSet.setRegister(rd, result);
+            cpu.pc += 4;
         }],
     [0x2, (instruction, cpu) => {
-            // TODO: Implement SLTI
+            const { rd, rs1, imm } = instruction;
+            const { registerSet } = cpu;
+            const rs1Value = registerSet.getRegister(rs1);
+            const result = rs1Value < imm ? 1 : 0;
+            registerSet.setRegister(rd, result);
+            cpu.pc += 4;
         }],
     [0x3, (instruction, cpu) => {
-            // TODO: Implement SLTIU
+            const { rd, rs1, immU } = instruction;
+            const { registerSet } = cpu;
+            const rs1Value = registerSet.getRegisterU(rs1);
+            const result = rs1Value < immU ? 1 : 0;
+            registerSet.setRegister(rd, result);
+            cpu.pc += 4;
         }],
     [0x4, (instruction, cpu) => {
-            // TODO: Implement XORI
+            const { rd, rs1, imm } = instruction;
+            const { registerSet } = cpu;
+            const rs1Value = registerSet.getRegister(rs1);
+            const result = rs1Value ^ imm;
+            registerSet.setRegister(rd, result);
+            cpu.pc += 4;
         }],
     [0x5, (instruction, cpu) => {
             const { rd, rs1, imm, func7, shamt } = instruction;
+            const { registerSet } = cpu;
+            const rs1Value = registerSet.getRegister(rs1);
             if (func7 === 0x00) {
-                // TODO: Implement SRLI
+                const result = rs1Value >>> shamt;
+                registerSet.setRegister(rd, result);
             }
             else if (func7 === 0x20) {
-                // TODO: Implement SRAI
+                const result = rs1Value >> shamt;
+                registerSet.setRegister(rd, result);
             }
+            cpu.pc += 4;
         }],
     [0x6, (instruction, cpu) => {
-            // TODO: Implement ORI
+            const { rd, rs1, imm } = instruction;
+            const { registerSet } = cpu;
+            const rs1Value = registerSet.getRegister(rs1);
+            const result = rs1Value | imm;
+            registerSet.setRegister(rd, result);
+            cpu.pc += 4;
         }],
     [0x7, (instruction, cpu) => {
-            // TODO: Implement ANDI
+            const { rd, rs1, imm } = instruction;
+            const { registerSet } = cpu;
+            const rs1Value = registerSet.getRegister(rs1);
+            const result = rs1Value & imm;
+            registerSet.setRegister(rd, result);
+            cpu.pc += 4;
         }],
 ]);
 const opcode0x23func3Table = new Map([
     [0x0, (instruction, cpu) => {
             const { rs1, rs2, imm } = instruction;
-            // TODO: Implement SB
+            const { registerSet, ram } = cpu;
+            const rs1Value = registerSet.getRegister(rs1);
+            const rs2Value = registerSet.getRegister(rs2);
+            const byte = (0, binaryFunctions_1.getRange)(rs2Value, 7, 0);
+            ram.setInt8(rs1Value + imm, byte);
         }],
     [0x1, (instruction, cpu) => {
             const { rs1, rs2, imm } = instruction;
-            // TODO: Implement SH
+            const { registerSet, ram } = cpu;
+            const rs1Value = registerSet.getRegister(rs1);
+            const rs2Value = registerSet.getRegister(rs2);
+            const half = (0, binaryFunctions_1.getRange)(rs2Value, 15, 0);
+            ram.setInt16(rs1Value + imm, half);
         }],
     [0x2, (instruction, cpu) => {
             const { rs1, rs2, imm } = instruction;
-            // TODO: Implement SW
+            const { registerSet, ram } = cpu;
+            const rs1Value = registerSet.getRegister(rs1);
+            const rs2Value = registerSet.getRegister(rs2);
+            ram.setInt32(rs1Value + imm, rs2Value);
         }],
 ]);
 const opcode0x33func3Table = new Map([
@@ -220,7 +300,7 @@ const opcode0x33func3Table = new Map([
             const { rd, rs1, rs2 } = instruction;
             const { registerSet } = cpu;
             const rs1Value = registerSet.getRegister(rs1);
-            const rs2Value = registerSet.getRegister(rs2);
+            const rs2Value = registerSet.getRegisterU(rs2);
             const result = rs1Value << rs2Value;
             registerSet.setRegister(rd, result);
         }],
@@ -281,27 +361,85 @@ const opcode0x33func3Table = new Map([
 ]);
 const opcode0x63func3Table = new Map([
     [0x0, (instruction, cpu) => {
-            // TODO: Implement BEQ
+            const { rs1, rs2, imm } = instruction;
+            const { registerSet } = cpu;
+            const rs1Value = registerSet.getRegister(rs1);
+            const rs2Value = registerSet.getRegister(rs2);
+            if (rs1Value === rs2Value) {
+                cpu.pc += imm;
+            }
+            else {
+                cpu.pc += 4;
+            }
         }],
     [0x1, (instruction, cpu) => {
-            // TODO: Implement BNE
+            const { rs1, rs2, imm } = instruction;
+            const { registerSet } = cpu;
+            const rs1Value = registerSet.getRegister(rs1);
+            const rs2Value = registerSet.getRegister(rs2);
+            if (rs1Value !== rs2Value) {
+                cpu.pc += imm;
+            }
+            else {
+                cpu.pc += 4;
+            }
         }],
     [0x4, (instruction, cpu) => {
-            // TODO: Implement BLT
+            const { rs1, rs2, imm } = instruction;
+            const { registerSet } = cpu;
+            const rs1Value = registerSet.getRegister(rs1);
+            const rs2Value = registerSet.getRegister(rs2);
+            if (rs1Value < rs2Value) {
+                cpu.pc += imm;
+            }
+            else {
+                cpu.pc += 4;
+            }
         }],
     [0x5, (instruction, cpu) => {
-            // TODO: Implement BGE
+            const { rs1, rs2, imm } = instruction;
+            const { registerSet } = cpu;
+            const rs1Value = registerSet.getRegister(rs1);
+            const rs2Value = registerSet.getRegister(rs2);
+            if (rs1Value >= rs2Value) {
+                cpu.pc += imm;
+            }
+            else {
+                cpu.pc += 4;
+            }
         }],
     [0x6, (instruction, cpu) => {
-            // TODO: Implement BLTU
+            const { rs1, rs2, imm } = instruction;
+            const { registerSet } = cpu;
+            const rs1Value = registerSet.getRegisterU(rs1);
+            const rs2Value = registerSet.getRegisterU(rs2);
+            if (rs1Value < rs2Value) {
+                cpu.pc += imm;
+            }
+            else {
+                cpu.pc += 4;
+            }
         }],
     [0x7, (instruction, cpu) => {
-            // TODO: Implement BGEU
+            const { rs1, rs2, imm } = instruction;
+            const { registerSet } = cpu;
+            const rs1Value = registerSet.getRegisterU(rs1);
+            const rs2Value = registerSet.getRegisterU(rs2);
+            if (rs1Value >= rs2Value) {
+                cpu.pc += imm;
+            }
+            else {
+                cpu.pc += 4;
+            }
         }],
 ]);
 const opcode0x67func3Table = new Map([
     [0x0, (instruction, cpu) => {
-            // TODO: Implement JALR
+            const { rd, rs1, imm } = instruction;
+            const { registerSet } = cpu;
+            const rs1Value = registerSet.getRegister(rs1);
+            registerSet.setRegister(rd, cpu.pc + 4);
+            cpu.pc = rs1Value + imm;
         }]
 ]);
 const opcode0x73func3Table = new Map([
@@ -326,15 +464,22 @@ const b_TypeOpcodeTable = new Map([
 ]);
 const u_TypeOpcodeTable = new Map([
     [0x37, (instruction, cpu) => {
-            // TODO: Implement LUI
+            const { rd, imm } = instruction;
+            const { registerSet } = cpu;
+            registerSet.setRegister(rd, imm);
         }],
     [0x17, (instruction, cpu) => {
-            // TODO: Implement AUIPC
+            const { rd, imm } = instruction;
+            const { registerSet } = cpu;
+            registerSet.setRegister(rd, imm + cpu.pc);
         }]
 ]);
 const j_TypeOpcodeTable = new Map([
     [0x6F, (instruction, cpu) => {
-            // TODO: Implement JAL
+            const { rd, imm } = instruction;
+            const { registerSet } = cpu;
+            registerSet.setRegister(rd, cpu.pc + 4);
+            cpu.pc += imm;
         }]
 ]);
 const opcodeTypeTable = new Map([

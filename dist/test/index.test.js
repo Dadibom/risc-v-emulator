@@ -73,3 +73,30 @@ describe('Testing signExtend:', () => {
         expect((0, binaryFunctions_1.signExtend)(0xFFF, 13)).toBe(0xFFF);
     });
 });
+describe('Assembly of branch instructions:', () => {
+    //test('branch')
+});
+describe('Testing basic toy programs:', () => {
+    test('Simple add, branch, and srl instructions', () => {
+        const program = [
+            'add tp, ra, sp',
+            'beq tp, zero, 0xC',
+            'blt tp, ra, 12',
+            'add gp, gp, sp',
+            'add gp, gp, sp',
+            'srl gp, gp, ra',
+            'add zero, zero, x1',
+            'add zero, zero, x1',
+        ];
+        const bin = (0, assembler_1.assemble)(program);
+        const cpu = new cpu_1.CPU(bin, 0);
+        cpu.registerSet.setRegister(1, 5);
+        cpu.registerSet.setRegister(2, -8);
+        cpu.registerSet.setRegister(3, 64);
+        for (let i = 0; i < 6; i++) {
+            cpu.executionStep();
+        }
+        expect(cpu.registerSet.getRegister(3)).toBe(2);
+        expect(cpu.registerSet.getRegister(0)).toBe(0);
+    });
+});

@@ -4,15 +4,22 @@ import { parse } from "./parser";
 // Convert a a set of assembly instructions to machine code
 export function assemble(asm: string[]): ArrayBuffer {
 
-  const parsedAssembly = parse(asm);
+  //const parsedAssembly = parse(asm);
 
   // TODO: link symbols, labels, sections, files etc.
 
-  const binary = new ArrayBuffer(parsedAssembly.length * 4);
+  const parsedAssembly = asm;
 
-  // TODO: actually convert assembly into binary values
+  const binaryBuffer = new ArrayBuffer(parsedAssembly.length * 4);
 
-  return binary;
+  const binView = new DataView(binaryBuffer);
+
+  parsedAssembly.forEach((line: string, index: number) => {
+    const machineCode = assembleLine(line);
+    binView.setInt32(index * 4, machineCode.binary, true);
+  })
+
+  return binaryBuffer;
 }
 
 // Convert a single assembly instruction to machine code
