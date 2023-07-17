@@ -31,236 +31,104 @@ export class CPU {
 
   }
 
-  executeR_Type(instruction: R_Type) {
-    // TODO: Implement R-Type execution
+  private executeR_Type(instruction: R_Type) {
 
-    const { rd, rs1, rs2, func3, func7 } = instruction;
+    const { opcode, func3 } = instruction;
 
-    switch (func3) {
-      case 0x0:
-        if (func7 === 0x00) {
-          // TODO: Implement ADD
-        } else if (func7 === 0x20) {
-          // TODO: Implement SUB
-        }
-        break;
+    // Get func3 lookup table for R_Type instructions
+    const funcTable = r_TypeOpcodeTable.get(opcode);
 
-      case 0x1:
-        // TODO: Implement SLL
-        break;
+    const operation = funcTable?.get(func3);
 
-      case 0x2:
-        // TODO: Implement SLT
-        break;
-
-      case 0x3:
-        // TODO: Implement SLTU
-        break;
-
-      case 0x4:
-        // TODO: Implement XOR
-        break;
-
-      case 0x5:
-        if (func7 === 0x00) {
-          // TODO: Implement SRL
-        } else if (func7 === 0x20) {
-          // TODO: Implement SRA
-        }
-        break;
-
-      case 0x6:
-        // TODO: Implement OR
-        break;
-
-      case 0x7:
-        // TODO: Implement AND
-        break;
-
-      default:
-        console.log("WARNING: Invalid instruction");
-
+    if (operation !== undefined) {
+      operation(instruction, this);
+    } else {
+      console.log('WARNING: Invalid Instruction');
     }
 
     this.instructionPointer += 4;
 
   }
 
-  executeI_Type(instruction: I_Type) {
-    // TODO: Implement I-Type execution
-    
-    const { opcode, rd, rs1, imm, func3, func7, shamt } = instruction;
+  private executeI_Type(instruction: I_Type) {
+    const { opcode, func3 } = instruction;
 
-    switch (opcode) {
-      case 0x67:
-        // TODO: Implement JALR
-        break;
+    // Get func3 lookup table for I_Type instructions
+    const funcTable = i_TypeOpcodeTable.get(opcode);
 
-      case 0x03:
+    const operation = funcTable?.get(func3);
 
-        switch (func3) {
-          case 0x0:
-            // TODO: Implement LB
-            break;
-
-          case 0x1:
-            // TODO: Implement LH
-            break;
-
-          case 0x2:
-            // TODO: Implement LW
-            break;
-
-          case 0x4:
-            // TODO: Implement LBU
-            break;
-
-          case 0x5:
-            // TODO: Implement LHU
-            break;
-
-          default:
-            console.log('WARNING: Invalid instruction');
-        }
-
-        this.instructionPointer += 4;
-
-        break;
-
-      case 0x13:
-
-        switch (func3) {
-          case 0x0:
-            // TODO: Implement ADDI
-            break;
-
-          case 0x2:
-            // TODO: Implement SLTI
-            break;
-
-          case 0x3:
-            // TODO: Implement SLTIU
-            break;
-
-          case 0x4:
-            // TODO: Implement XORI
-            break;
-
-          case 0x6:
-            // TODO: Implement ORI
-            break;
-
-          case 0x7:
-            // TODO: Implement ANDI
-            break;
-
-          case 0x1:
-            // TODO: Implement SLLI
-            break;
-
-          case 0x5:
-            if (func7 === 0x00) {
-              // TODO: Implement SRLI
-            } else if (func7 === 0x20) {
-              // TODO: Implement SRAI
-            }
-            break;
-
-          default:
-            console.log('WARNING: Invalid instruction');
-        }
-
-        this.instructionPointer += 4;
-
-        break;
-
-      case 0x73:
-        // TODO: Implement ECALL
-        break;
-
-      default:
-        console.log('WARNING: Invalid instruction');
+    if (operation !== undefined) {
+      operation(instruction, this);
+    } else {
+      console.log('WARNING: Invalid Instruction');
     }
 
   }
 
-  executeS_Type(instruction: S_Type) {
+  private executeS_Type(instruction: S_Type) {
 
-    const { rs1, rs2, imm, func3 } = instruction;
+    const { opcode, func3 } = instruction;
 
-    switch (func3) {
-      case 0x0:
-        //TODO: Implement SB
-        break;
+    // Get func3 lookup table for S_Type instructions
+    const funcTable = s_TypeOpcodeTable.get(opcode);
 
-      case 0x1:
-        // TODO: Implement SH
-        break;
+    const operation = funcTable?.get(func3);
 
-      case 0x2:
-        // TODO: Implement SW
-        break;
+    if (operation !== undefined) {
+      operation(instruction, this);
+    } else {
+      console.log('WARNING: Invalid Instruction');
+    }
 
-      default:
-        console.log("WARNING: Invalid instruction");
+    this.instructionPointer += 4;
+
+  }
+
+  private executeB_Type(instruction: B_Type) {
+
+    const { opcode, func3 } = instruction;
+
+    // Get func3 lookup table for B_Type instructions
+    const funcTable = b_TypeOpcodeTable.get(opcode);
+
+    const operation = funcTable?.get(func3);
+
+    if (operation !== undefined) {
+      operation(instruction, this);
+    } else {
+      console.log('WARNING: Invalid Instruction');
     }
 
   }
 
-  executeB_Type(instruction: B_Type) {
+  private executeU_Type(instruction: U_Type) {
+    const { opcode } = instruction;
 
-    const { rs1, rs2, imm, func3 } = instruction;
+    // Get func3 lookup table for U_Type instructions
+    const operation = u_TypeOpcodeTable.get(opcode);
 
-    switch (func3) {
-      case 0x0:
-        // TODO: Implement BEQ
-        break;
-
-      case 0x1:
-        // TODO: Implement BNE
-        break;
-
-      case 0x4:
-        // TODO: Implement BLT
-        break;
-
-      case 0x5:
-        // TODO: Implement BGE
-        break;
-
-      case 0x6:
-        // TODO: Implement BLTU
-        break;
-
-      case 0x7:
-        // TODO: Implement BGEU
-        break;
-
-      default:
-        console.log("WARNING: Invalid instruction");
-    }
-
-  }
-
-  executeU_Type(instruction: U_Type) {
-    
-    const { opcode, rd, imm } = instruction;
-
-    if (opcode === 0x37) {
-      // TODO: Implement LUI
-    } else if (opcode === 0x17) {
-      // TODO: Implement AUIPC
+    if (operation !== undefined) {
+      operation(instruction, this);
+    } else {
+      console.log('WARNING: Invalid Instruction');
     }
 
     this.instructionPointer += 4;
   }
 
-  executeJ_Type(instruction: J_Type) {
-    // TODO: Implement JAL (Only J instruction in RV32I)
+  private executeJ_Type(instruction: J_Type) {
+    const { opcode } = instruction;
 
-    const { rd, imm } = instruction;
+    // Get func3 lookup table for J_Type instructions
+    const operation = j_TypeOpcodeTable.get(opcode);
+
+    if (operation !== undefined) {
+      operation(instruction, this);
+    } else {
+      console.log('WARNING: Invalid Instruction');
+    }
   }
-
 
 }
 
@@ -291,3 +159,233 @@ class RegisterSet {
   }
 
 }
+
+type OpcodeTable<T extends Instruction> = Map<number, (instruction: T, cpu: CPU) => void>;
+type OpcodeFuncTable<T extends Instruction> = Map<number, Map<number, (instruction: T, cpu: CPU) => void>>;
+type FuncTable<T extends Instruction> = Map<number, (instruction: T, cpu: CPU) => void>;
+
+const opcode0x03func3Table: FuncTable<I_Type> = new Map([
+  [0x0, (instruction: I_Type, cpu: CPU) => {
+    // TODO: Implement LB
+  }],
+
+  [0x1, (instruction: I_Type, cpu: CPU) => {
+    // TODO: Implement LH
+  }],
+
+  [0x2, (instruction: I_Type, cpu: CPU) => {
+    // TODO: Implement LW
+  }],
+
+  [0x4, (instruction: I_Type, cpu: CPU) => {
+    // TODO: Implement LBU
+  }],
+
+  [0x5, (instruction: I_Type, cpu: CPU) => {
+    // TODO: Implement LHU
+  }],
+]);
+
+const opcode0x13func3Table: FuncTable<I_Type> = new Map([
+  [0x0, (instruction: I_Type, cpu: CPU) => {
+    // TODO: Implement ADDI
+  }],
+
+  [0x1, (instruction: I_Type, cpu: CPU) => {
+    // TODO: Implement SLLI
+  }],
+
+  [0x2, (instruction: I_Type, cpu: CPU) => {
+    // TODO: Implement SLTI
+  }],
+
+  [0x3, (instruction: I_Type, cpu: CPU) => {
+    // TODO: Implement SLTIU
+  }],
+
+  [0x4, (instruction: I_Type, cpu: CPU) => {
+    // TODO: Implement XORI
+  }],
+
+  [0x5, (instruction: I_Type, cpu: CPU) => {
+    const { rd, rs1, imm, func7, shamt } = instruction;
+
+    if (func7 === 0x00) {
+      // TODO: Implement SRLI
+    } else if (func7 === 0x20) {
+      // TODO: Implement SRAI
+    }
+
+  }],
+
+  [0x6, (instruction: I_Type, cpu: CPU) => {
+    // TODO: Implement ORI
+  }],
+
+  [0x7, (instruction: I_Type, cpu: CPU) => {
+    // TODO: Implement ANDI
+  }],
+]);
+
+const opcode0x23func3Table: FuncTable<S_Type> = new Map([
+  [0x0, (instruction: S_Type, cpu: CPU) => {
+    const { rs1, rs2, imm } = instruction;
+
+    // TODO: Implement SB
+
+  }],
+
+  [0x1, (instruction: S_Type, cpu: CPU) => {
+    const { rs1, rs2, imm } = instruction;
+
+    // TODO: Implement SH
+
+  }],
+
+  [0x2, (instruction: S_Type, cpu: CPU) => {
+    const { rs1, rs2, imm } = instruction;
+
+    // TODO: Implement SW
+
+  }],
+]);
+
+const opcode0x33func3Table: FuncTable<R_Type> = new Map([
+  [0x0, (instruction: R_Type, cpu: CPU) => {
+    const { rd, rs1, rs2, func7 } = instruction;
+
+    if (func7 === 0x00) {
+      // TODO: Implement ADD
+    } else if (func7 === 0x20) {
+      // TODO: Implement SUB
+    }
+
+  }],
+
+  [0x1, (instruction: R_Type, cpu: CPU) => {
+    const { rd, rs1, rs2 } = instruction;
+
+    // TODO: Implement SLL
+
+  }],
+
+  [0x2, (instruction: R_Type, cpu: CPU) => {
+    const { rd, rs1, rs2 } = instruction;
+
+    // TODO: Implement SLT
+
+  }],
+
+  [0x3, (instruction: R_Type, cpu: CPU) => {
+    const { rd, rs1, rs2 } = instruction;
+
+    // TODO: Implement SLTU
+
+  }],
+
+  [0x4, (instruction: R_Type, cpu: CPU) => {
+    const { rd, rs1, rs2 } = instruction;
+
+    // TODO: Implement XOR
+
+  }],
+
+  [0x5, (instruction: R_Type, cpu: CPU) => {
+    const { rd, rs1, rs2, func7 } = instruction;
+
+    if (func7 === 0x00) {
+      // TODO: Implement SRL
+    } else if (func7 === 0x20) {
+      // TODO: Implement SRA
+    }
+
+  }],
+
+  [0x6, (instruction: R_Type, cpu: CPU) => {
+    const { rd, rs1, rs2 } = instruction;
+
+    // TODO: Implement OR
+
+  }],
+
+  [0x7, (instruction: R_Type, cpu: CPU) => {
+    const { rd, rs1, rs2 } = instruction;
+
+    // TODO: Implement AND
+
+  }],
+
+]);
+
+const opcode0x63func3Table: FuncTable<B_Type> = new Map([
+  [0x0, (instruction: B_Type, cpu: CPU) => {
+    // TODO: Implement BEQ
+  }],
+
+  [0x1, (instruction: B_Type, cpu: CPU) => {
+    // TODO: Implement BNE
+  }],
+
+  [0x4, (instruction: B_Type, cpu: CPU) => {
+    // TODO: Implement BLT
+  }],
+
+  [0x5, (instruction: B_Type, cpu: CPU) => {
+    // TODO: Implement BGE
+  }],
+
+  [0x6, (instruction: B_Type, cpu: CPU) => {
+    // TODO: Implement BLTU
+  }],
+
+  [0x7, (instruction: B_Type, cpu: CPU) => {
+    // TODO: Implement BGEU
+  }],
+]);
+
+const opcode0x67func3Table: FuncTable<I_Type> = new Map([
+  [0x0, (instruction: I_Type, cpu: CPU) => {
+    // TODO: Implement JALR
+  }]
+]);
+
+const opcode0x73func3Table: FuncTable<I_Type> = new Map([
+  [0x0, (instruction: I_Type, cpu: CPU) => {
+    // TODO: Implement ECALL
+  }]
+]);
+
+const r_TypeOpcodeTable: OpcodeFuncTable<R_Type> = new Map([
+  [0x33, opcode0x33func3Table]
+]);
+
+const i_TypeOpcodeTable: OpcodeFuncTable<I_Type> = new Map([
+  [0x03, opcode0x03func3Table],
+  [0x13, opcode0x13func3Table],
+  [0x67, opcode0x67func3Table],
+  [0x73, opcode0x73func3Table]
+]);
+
+const s_TypeOpcodeTable: OpcodeFuncTable<S_Type> = new Map([
+  [0x23, opcode0x23func3Table]
+]);
+
+const b_TypeOpcodeTable: OpcodeFuncTable<B_Type> = new Map([
+  [0x63, opcode0x63func3Table]
+]);
+
+const u_TypeOpcodeTable: OpcodeTable<U_Type> = new Map([
+  [0x37, (instruction: U_Type, cpu: CPU) => {
+    // TODO: Implement LUI
+  }],
+
+  [0x17, (instruction: U_Type, cpu: CPU) => {
+    // TODO: Implement AUIPC
+  }]
+]); 
+
+const j_TypeOpcodeTable: OpcodeTable<J_Type> = new Map([
+  [0x6F, (instruction: J_Type, cpu: CPU) => {
+    // TODO: Implement JAL
+  }]
+]);
