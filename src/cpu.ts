@@ -245,42 +245,112 @@ const opcode0x03func3Table: FuncTable<I_Type> = new Map([
 
 const opcode0x13func3Table: FuncTable<I_Type> = new Map([
   [0x0, (instruction: I_Type, cpu: CPU) => {
-    // TODO: Implement ADDI
+    const { rd, rs1, imm } = instruction;
+    const { registerSet } = cpu;
+
+    const rs1Value = registerSet.getRegister(rs1);
+
+    const result = rs1Value + imm;
+
+    registerSet.setRegister(rd, result);
+
+    cpu.pc += 4;
   }],
 
   [0x1, (instruction: I_Type, cpu: CPU) => {
-    // TODO: Implement SLLI
+    const { rd, rs1, shamt } = instruction;
+    const { registerSet } = cpu;
+
+    const rs1Value = registerSet.getRegister(rs1);
+
+    const result = rs1Value << shamt;
+
+    registerSet.setRegister(rd, result);
+
+    cpu.pc += 4;
   }],
 
   [0x2, (instruction: I_Type, cpu: CPU) => {
-    // TODO: Implement SLTI
+    const { rd, rs1, imm } = instruction;
+    const { registerSet } = cpu;
+
+    const rs1Value = registerSet.getRegister(rs1);
+
+    const result = rs1Value < imm ? 1 : 0;
+
+    registerSet.setRegister(rd, result);
+
+    cpu.pc += 4;
   }],
 
   [0x3, (instruction: I_Type, cpu: CPU) => {
-    // TODO: Implement SLTIU
+    const { rd, rs1, immU } = instruction;
+    const { registerSet } = cpu;
+
+    const rs1Value = registerSet.getRegisterU(rs1);
+
+    const result = rs1Value < immU ? 1 : 0;
+
+    registerSet.setRegister(rd, result);
+
+    cpu.pc += 4;
   }],
 
   [0x4, (instruction: I_Type, cpu: CPU) => {
-    // TODO: Implement XORI
+    const { rd, rs1, imm } = instruction;
+    const { registerSet } = cpu;
+
+    const rs1Value = registerSet.getRegister(rs1);
+
+    const result = rs1Value ^ imm;
+
+    registerSet.setRegister(rd, result);
+
+    cpu.pc += 4;
   }],
 
   [0x5, (instruction: I_Type, cpu: CPU) => {
     const { rd, rs1, imm, func7, shamt } = instruction;
+    const { registerSet } = cpu;
+
+    const rs1Value = registerSet.getRegister(rs1);
 
     if (func7 === 0x00) {
-      // TODO: Implement SRLI
+      const result = rs1Value >>> shamt;
+      registerSet.setRegister(rd, result);
+      
     } else if (func7 === 0x20) {
-      // TODO: Implement SRAI
+      const result = rs1Value >> shamt;
+      registerSet.setRegister(rd, result);
     }
 
+    cpu.pc += 4;
   }],
 
   [0x6, (instruction: I_Type, cpu: CPU) => {
-    // TODO: Implement ORI
+    const { rd, rs1, imm } = instruction;
+    const { registerSet } = cpu;
+
+    const rs1Value = registerSet.getRegister(rs1);
+
+    const result = rs1Value | imm;
+
+    registerSet.setRegister(rd, result);
+
+    cpu.pc += 4;
   }],
 
   [0x7, (instruction: I_Type, cpu: CPU) => {
-    // TODO: Implement ANDI
+    const { rd, rs1, imm } = instruction;
+    const { registerSet } = cpu;
+
+    const rs1Value = registerSet.getRegister(rs1);
+
+    const result = rs1Value & imm;
+
+    registerSet.setRegister(rd, result);
+
+    cpu.pc += 4;
   }],
 ]);
 
@@ -345,7 +415,7 @@ const opcode0x33func3Table: FuncTable<R_Type> = new Map([
     const { registerSet } = cpu;
 
     const rs1Value = registerSet.getRegister(rs1);
-    const rs2Value = registerSet.getRegister(rs2);
+    const rs2Value = registerSet.getRegisterU(rs2);
 
     const result = rs1Value << rs2Value;
     registerSet.setRegister(rd, result);
