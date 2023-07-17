@@ -631,7 +631,11 @@ const u_TypeOpcodeTable: OpcodeTable<U_Type> = new Map([
 
 const j_TypeOpcodeTable: OpcodeTable<J_Type> = new Map([
   [0x6F, (instruction: J_Type, cpu: CPU) => {
-    // TODO: Implement JAL
+    const { rd, imm } = instruction;
+    const { registerSet } = cpu;
+
+    registerSet.setRegister(rd, cpu.pc + 4);
+    cpu.pc += imm;
   }]
 ]);
 
