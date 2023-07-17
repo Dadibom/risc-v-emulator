@@ -16,7 +16,7 @@ describe('Testing getBit function:', () => {
       expect(getBit(input[0], input[1])).toBe(expected);
     })
   })
-})
+});
 
 describe('Testing setBit function:', () => {
   setBitTestCases.forEach((expected: number, input: number[]) => {
@@ -24,7 +24,7 @@ describe('Testing setBit function:', () => {
       expect(setBit(input[0], input[1], input[2])).toBe(expected);
     })
   })
-})
+});
 
 describe('Testing getRange function:', () => {
   getRangeTestCases.forEach((expected: number, input: number[]) => {
@@ -32,7 +32,7 @@ describe('Testing getRange function:', () => {
       expect(getRange(input[0], input[1], input[2])).toBe(expected);
     })
   })
-})
+});
 
 describe('Testing setRange function:', () => {
   setRangeTestCases.forEach((expected: number, input: number[]) => {
@@ -40,7 +40,7 @@ describe('Testing setRange function:', () => {
       expect(setRange(input[0], input[1], input[2], input[3])).toBe(expected);
     })
   })
-})
+});
 
 describe('Testing assembleLine function:', () => {
   test('Input: addi, x17, x0, 93', () => {
@@ -50,4 +50,4 @@ describe('Testing assembleLine function:', () => {
   test('Input: add fp, a2, t4', () => {
     expect(assembleLine('add fp, a2, t4')).toHaveProperty('binary', 0x01D60433)
   })
-})
+});
