@@ -318,7 +318,7 @@ const opcode0x13func3Table: FuncTable<I_Type> = new Map([
     if (func7 === 0x00) {
       const result = rs1Value >>> shamt;
       registerSet.setRegister(rd, result);
-      
+
     } else if (func7 === 0x20) {
       const result = rs1Value >> shamt;
       registerSet.setRegister(rd, result);
@@ -498,27 +498,88 @@ const opcode0x33func3Table: FuncTable<R_Type> = new Map([
 
 const opcode0x63func3Table: FuncTable<B_Type> = new Map([
   [0x0, (instruction: B_Type, cpu: CPU) => {
-    // TODO: Implement BEQ
+    const { rs1, rs2, imm } = instruction;
+    const { registerSet } = cpu;
+
+    const rs1Value = registerSet.getRegister(rs1);
+    const rs2Value = registerSet.getRegister(rs2);
+
+    if (rs1Value === rs2Value) {
+      cpu.pc += imm;
+    } else {
+      cpu.pc += 4;
+    }
+
   }],
 
   [0x1, (instruction: B_Type, cpu: CPU) => {
-    // TODO: Implement BNE
+    const { rs1, rs2, imm } = instruction;
+    const { registerSet } = cpu;
+
+    const rs1Value = registerSet.getRegister(rs1);
+    const rs2Value = registerSet.getRegister(rs2);
+
+    if (rs1Value !== rs2Value) {
+      cpu.pc += imm;
+    } else {
+      cpu.pc += 4;
+    }
   }],
 
   [0x4, (instruction: B_Type, cpu: CPU) => {
-    // TODO: Implement BLT
+    const { rs1, rs2, imm } = instruction;
+    const { registerSet } = cpu;
+
+    const rs1Value = registerSet.getRegister(rs1);
+    const rs2Value = registerSet.getRegister(rs2);
+
+    if (rs1Value < rs2Value) {
+      cpu.pc += imm;
+    } else {
+      cpu.pc += 4;
+    }
   }],
 
   [0x5, (instruction: B_Type, cpu: CPU) => {
-    // TODO: Implement BGE
+    const { rs1, rs2, imm } = instruction;
+    const { registerSet } = cpu;
+
+    const rs1Value = registerSet.getRegister(rs1);
+    const rs2Value = registerSet.getRegister(rs2);
+
+    if (rs1Value >= rs2Value) {
+      cpu.pc += imm;
+    } else {
+      cpu.pc += 4;
+    }
   }],
 
   [0x6, (instruction: B_Type, cpu: CPU) => {
-    // TODO: Implement BLTU
+    const { rs1, rs2, imm } = instruction;
+    const { registerSet } = cpu;
+
+    const rs1Value = registerSet.getRegisterU(rs1);
+    const rs2Value = registerSet.getRegisterU(rs2);
+
+    if (rs1Value < rs2Value) {
+      cpu.pc += imm;
+    } else {
+      cpu.pc += 4;
+    }
   }],
 
   [0x7, (instruction: B_Type, cpu: CPU) => {
-    // TODO: Implement BGEU
+    const { rs1, rs2, imm } = instruction;
+    const { registerSet } = cpu;
+
+    const rs1Value = registerSet.getRegisterU(rs1);
+    const rs2Value = registerSet.getRegisterU(rs2);
+
+    if (rs1Value >= rs2Value) {
+      cpu.pc += imm;
+    } else {
+      cpu.pc += 4;
+    }
   }],
 ]);
 
