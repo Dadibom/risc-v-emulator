@@ -1,4 +1,4 @@
-import { getBit, getRange, setRange } from "../binaryFunctions";
+import { getBit, getRange, setRange, signExtend } from "../binaryFunctions";
 
 export abstract class Instruction {
 
@@ -164,6 +164,10 @@ export class I_Type extends Instruction implements HasImmediate {
   }
 
   get imm() {
+    return signExtend(this.immU, 12);
+  }
+
+  get immU() {
     return getRange(this.binary, 31, 20);
   }
 
@@ -207,6 +211,10 @@ export class S_Type extends Instruction implements HasImmediate {
   }
 
   get imm() {
+    return signExtend(this.immU, 12);
+  }
+
+  get immU() {
     return getRange(this.binary, 11, 7) + (getRange(this.binary, 31, 25) << 13);
   }
 
@@ -254,6 +262,10 @@ export class B_Type extends Instruction implements HasImmediate {
   }
 
   get imm() {
+    return signExtend(this.immU, 13);
+  }
+
+  get immU() {
 
     const imm5 = getRange(this.binary, 11, 7);
     const imm7 = getRange(this.binary, 31, 25);
@@ -300,6 +312,10 @@ export class U_Type extends Instruction implements HasImmediate {
   }
 
   get imm() {
+    return signExtend(this.immU, 20);
+  }
+
+  get immU() {
     return getRange(this.binary, 31, 12) << 12;
   }
 
@@ -327,6 +343,10 @@ export class J_Type extends Instruction implements HasImmediate {
   }
 
   get imm() {
+    return signExtend(this.immU, 21);
+  }
+
+  get immU() {
 
     const imm = getRange(this.binary, 31, 12);
 
@@ -382,4 +402,5 @@ export interface InstructionValues {
 
 interface HasImmediate {
   imm: number,
+  immU: number
 }

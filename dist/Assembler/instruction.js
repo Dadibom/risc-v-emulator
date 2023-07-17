@@ -89,10 +89,10 @@ class I_Type extends Instruction {
         }
     }
     get rd() {
-        return (0, binaryFunctions_1.getRange)(this.binary, 11, 6);
+        return (0, binaryFunctions_1.getRange)(this.binary, 11, 7);
     }
     set rd(value) {
-        this.binary = (0, binaryFunctions_1.setRange)(this.binary, value, 11, 6);
+        this.binary = (0, binaryFunctions_1.setRange)(this.binary, value, 11, 7);
     }
     get func3() {
         return (0, binaryFunctions_1.getRange)(this.binary, 14, 12);
@@ -209,10 +209,10 @@ class U_Type extends Instruction {
         this.type = InstructionType.U;
     }
     get rd() {
-        return (0, binaryFunctions_1.getRange)(this.binary, 11, 6);
+        return (0, binaryFunctions_1.getRange)(this.binary, 11, 7);
     }
     set rd(value) {
-        this.binary = (0, binaryFunctions_1.setRange)(this.binary, value, 11, 6);
+        this.binary = (0, binaryFunctions_1.setRange)(this.binary, value, 11, 7);
     }
     get imm() {
         return (0, binaryFunctions_1.getRange)(this.binary, 31, 12) << 12;
@@ -228,11 +228,11 @@ class J_Type extends Instruction {
         this.type = InstructionType.J;
     }
     get rd() {
-        return (0, binaryFunctions_1.getRange)(this.binary, 11, 6);
+        return (0, binaryFunctions_1.getRange)(this.binary, 11, 7);
         ;
     }
     set rd(value) {
-        this.binary = (0, binaryFunctions_1.setRange)(this.binary, value, 11, 6);
+        this.binary = (0, binaryFunctions_1.setRange)(this.binary, value, 11, 7);
     }
     get imm() {
         const imm = (0, binaryFunctions_1.getRange)(this.binary, 31, 12);

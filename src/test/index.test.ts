@@ -1,7 +1,7 @@
 import { assembleLine } from "../Assembler/assembler";
 import { R_Type } from "../Assembler/instruction";
 import { parse, parserTestCases } from "../Assembler/parser";
-import { getBit, getBitTestCases, getRange, getRangeTestCases, setBit, setBitTestCases, setRange, setRangeTestCases } from "../binaryFunctions";
+import { getBit, getBitTestCases, getRange, getRangeTestCases, setBit, setBitTestCases, setRange, setRangeTestCases, signExtend } from "../binaryFunctions";
 import { CPU, RegisterSet } from "../cpu";
 
 // describe('Testing Parser:', () => {
@@ -85,4 +85,16 @@ describe('Testing R-Type instruction execution:', () => {
     expect(cpu.registerSet.getRegister(3)).toBe(8);
 
   });
+})
+
+describe('Testing signExtend:', () => {
+  
+  test('0xFFF as 12-bit signed int', () => {
+    expect(signExtend(0xFFF, 12)).toBe(-1);
+  })
+
+  test('0xFFF as 13-bit signed int', () => {
+    expect(signExtend(0xFFF, 13)).toBe(0xFFF);
+  })
+
 })

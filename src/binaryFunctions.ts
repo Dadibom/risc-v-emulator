@@ -74,6 +74,17 @@ export function setBit(input: number, value: number, index: number): number {
 
 }
 
+// Sign extends input of specified width to 32 bits
+export function signExtend(input: number, width: number): number {
+  if (getBit(input, width - 1)) {
+    const bitmask = 0xFFFFFFFF >> (32 - width);
+    return setRange(input, bitmask, 31, width - 1);
+
+  } else {
+    return input;
+  }
+}
+
 export const getBitTestCases: Map<number[], number> = new Map([
   [[32, 4], 0],
   [[32, 5], 1],

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.setRangeTestCases = exports.getRangeTestCases = exports.setBitTestCases = exports.getBitTestCases = exports.setBit = exports.getBit = exports.setRange = exports.getRange = void 0;
+exports.setRangeTestCases = exports.getRangeTestCases = exports.setBitTestCases = exports.getBitTestCases = exports.signExtend = exports.setBit = exports.getBit = exports.setRange = exports.getRange = void 0;
 // Returns bits from 32-bit input in specified range
 function getRange(input, upperEnd, lowerEnd) {
     if (upperEnd > 31 ||
@@ -57,6 +57,17 @@ function setBit(input, value, index) {
         (input | (1 << index)) ^ (1 << index);
 }
 exports.setBit = setBit;
+// Sign extends input of specified width to 32 bits
+function signExtend(input, width) {
+    if (getBit(input, width - 1)) {
+        const bitmask = 0xFFFFFFFF >> (32 - width);
+        return setRange(input, bitmask, 31, width - 1);
+    }
+    else {
+        return input;
+    }
+}
+exports.signExtend = signExtend;
 exports.getBitTestCases = new Map([
     [[32, 4], 0],
     [[32, 5], 1],

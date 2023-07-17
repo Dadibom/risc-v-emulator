@@ -1,16 +1,15 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const assembler_1 = require("../Assembler/assembler");
-const parser_1 = require("../Assembler/parser");
 const binaryFunctions_1 = require("../binaryFunctions");
 const cpu_1 = require("../cpu");
-describe('Testing Parser:', () => {
-    parser_1.parserTestCases.forEach((expected, input) => {
-        test(`Input: ${input}`, () => {
-            expect((0, parser_1.parse)(input)).toStrictEqual(expected);
-        });
-    });
-});
+// describe('Testing Parser:', () => {
+//   parserTestCases.forEach((expected: string[], input: string[]) => {
+//     test(`Input: ${input}`, () => {
+//       expect(parse(input)).toStrictEqual(expected);
+//     });
+//   })
+// });
 describe('Testing getBit function:', () => {
     binaryFunctions_1.getBitTestCases.forEach((expected, input) => {
         test(`Input: ${input[0]}, ${input[1]}`, () => {
@@ -64,5 +63,13 @@ describe('Testing R-Type instruction execution:', () => {
         const addInstruction = (0, assembler_1.assembleLine)('add x3, x1, x2');
         cpu.executeInstruction(addInstruction.binary);
         expect(cpu.registerSet.getRegister(3)).toBe(8);
+    });
+});
+describe('Testing signExtend:', () => {
+    test('0xFFF as 12-bit signed int', () => {
+        expect((0, binaryFunctions_1.signExtend)(0xFFF, 12)).toBe(-1);
+    });
+    test('0xFFF as 13-bit signed int', () => {
+        expect((0, binaryFunctions_1.signExtend)(0xFFF, 13)).toBe(0xFFF);
     });
 });
