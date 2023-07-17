@@ -4,8 +4,11 @@ import { getRange } from "./binaryFunctions";
 export class CPU {
 
   registerSet: RegisterSet = new RegisterSet(32);
+  ram: DataView;
 
-  constructor(public ram: ArrayBuffer, public instructionPointer: number) {}
+  constructor(ram: ArrayBuffer, public pc: number) {
+    this.ram = new DataView(ram);
+  }
   
   executeInstruction(instruction: number) {
 
@@ -49,7 +52,7 @@ export class CPU {
       console.log('WARNING: Invalid Instruction');
     }
 
-    this.instructionPointer += 4;
+    this.pc += 4;
 
   }
 
@@ -84,7 +87,7 @@ export class CPU {
       console.log('WARNING: Invalid Instruction');
     }
 
-    this.instructionPointer += 4;
+    this.pc += 4;
 
   }
 
@@ -117,7 +120,7 @@ export class CPU {
       console.log('WARNING: Invalid Instruction');
     }
 
-    this.instructionPointer += 4;
+    this.pc += 4;
   }
 
   private executeJ_Type(instruction: J_Type) {
@@ -185,23 +188,48 @@ type FuncTable<T extends Instruction> = Map<number, (instruction: T, cpu: CPU) =
 
 const opcode0x03func3Table: FuncTable<I_Type> = new Map([
   [0x0, (instruction: I_Type, cpu: CPU) => {
-    // TODO: Implement LB
+    const { registerSet, ram, pc } = cpu;
+    const { rd, rs1, imm } = instruction;
+    const rs1Value = registerSet.getRegister(rs1);
+
+    const byte = ram.getInt8(rs1Value + imm);
+    registerSet.setRegister(rd, byte);
   }],
 
   [0x1, (instruction: I_Type, cpu: CPU) => {
-    // TODO: Implement LH
+    const { registerSet, ram, pc } = cpu;
+    const { rd, rs1, imm } = instruction;
+    const rs1Value = registerSet.getRegister(rs1);
+
+    const byte = ram.getInt16(rs1Value + imm);
+    registerSet.setRegister(rd, byte);
   }],
 
   [0x2, (instruction: I_Type, cpu: CPU) => {
-    // TODO: Implement LW
+    const { registerSet, ram, pc } = cpu;
+    const { rd, rs1, imm } = instruction;
+    const rs1Value = registerSet.getRegister(rs1);
+
+    const byte = ram.getInt32(rs1Value + imm);
+    registerSet.setRegister(rd, byte);
   }],
 
   [0x4, (instruction: I_Type, cpu: CPU) => {
-    // TODO: Implement LBU
+    const { registerSet, ram, pc } = cpu;
+    const { rd, rs1, imm } = instruction;
+    const rs1Value = registerSet.getRegister(rs1);
+
+    const byte = ram.getUint8(rs1Value + imm);
+    registerSet.setRegister(rd, byte);
   }],
 
   [0x5, (instruction: I_Type, cpu: CPU) => {
-    // TODO: Implement LHU
+    const { registerSet, ram, pc } = cpu;
+    const { rd, rs1, imm } = instruction;
+    const rs1Value = registerSet.getRegister(rs1);
+
+    const byte = ram.getUint16(rs1Value + imm);
+    registerSet.setRegister(rd, byte);
   }],
 ]);
 
