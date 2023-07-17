@@ -49,10 +49,10 @@ class R_Type extends Instruction {
         this.type = InstructionType.R;
     }
     get rd() {
-        return (0, binaryFunctions_1.getRange)(this.binary, 11, 6);
+        return (0, binaryFunctions_1.getRange)(this.binary, 11, 7);
     }
     set rd(value) {
-        this.binary = (0, binaryFunctions_1.setRange)(this.binary, value, 11, 6);
+        this.binary = (0, binaryFunctions_1.setRange)(this.binary, value, 11, 7);
     }
     get func3() {
         return (0, binaryFunctions_1.getRange)(this.binary, 14, 12);

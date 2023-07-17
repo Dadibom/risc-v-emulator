@@ -1,4 +1,5 @@
-import { B_Type, I_Type, Instruction, J_Type, R_Type, S_Type, U_Type } from "./Assembler/instruction";
+import { B_Type, I_Type, Instruction, InstructionType, J_Type, R_Type, S_Type, U_Type } from "./Assembler/instruction";
+import { getRange } from "./binaryFunctions";
 
 export class CPU {
 
@@ -6,26 +7,28 @@ export class CPU {
 
   constructor(public ram: ArrayBuffer, public instructionPointer: number) {}
   
-  executeInstruction(instruction: Instruction) {
+  executeInstruction(instruction: number) {
 
-    switch (instruction.constructor) {
-      case R_Type:
-        this.executeR_Type(instruction as R_Type);
+    const instructionType = opcodeTypeTable.get(getRange(instruction, 6, 0));
+
+    switch (instructionType as InstructionType) {
+      case InstructionType.R:
+        this.executeR_Type(new R_Type({ binary: instruction }));
         break;
-      case I_Type:
-        this.executeI_Type(instruction as I_Type);
+      case InstructionType.I:
+        this.executeI_Type(new I_Type({ binary: instruction }));
         break;
-      case S_Type:
-        this.executeS_Type(instruction as S_Type);
+      case InstructionType.S:
+        this.executeS_Type(new S_Type({ binary: instruction }));
         break;
-      case B_Type:
-        this.executeB_Type(instruction as B_Type);
+      case InstructionType.B:
+        this.executeB_Type(new B_Type({ binary: instruction }));
         break;
-      case U_Type:
-        this.executeU_Type(instruction as U_Type);
+      case InstructionType.U:
+        this.executeU_Type(new U_Type({ binary: instruction }));
         break;
-      case J_Type:
-        this.executeJ_Type(instruction as J_Type);
+      case InstructionType.J:
+        this.executeJ_Type(new J_Type({ binary: instruction }));
         break;
     }
 
@@ -132,7 +135,7 @@ export class CPU {
 
 }
 
-class RegisterSet {
+export class RegisterSet {
 
   private registerBuffer: ArrayBuffer;
   private registerView: DataView;
@@ -143,19 +146,35 @@ class RegisterSet {
   }
 
   getRegister(index: number): number {
-    return this.registerView.getInt32(index);
+    if (index === 0) {
+      return 0;
+    }
+
+    return this.registerView.getInt32(index * 4, true);
   }
 
   getRegisterU(index: number): number {
-    return this.registerView.getUint32(index);
+    if (index === 0) {
+      return 0;
+    }
+
+    return this.registerView.getUint32(index * 4, true);
   }
 
   setRegister(index: number, value: number): void {
-    this.registerView.setInt32(index, value);
+    if (index === 0) {
+      return;
+    }
+
+    this.registerView.setInt32(index * 4, value, true);
   }
 
   setRegisterU(index: number, value: number): void {
-    this.registerView.setUint32(index, value);
+    if (index === 0) {
+      return;
+    }
+
+    this.registerView.setUint32(index * 4, value, true);
   }
 
 }
@@ -252,6 +271,7 @@ const opcode0x23func3Table: FuncTable<S_Type> = new Map([
 
 const opcode0x33func3Table: FuncTable<R_Type> = new Map([
   [0x0, (instruction: R_Type, cpu: CPU) => {
+
     const { rd, rs1, rs2, func7 } = instruction;
     const { registerSet } = cpu;
 
@@ -427,3 +447,16 @@ const j_TypeOpcodeTable: OpcodeTable<J_Type> = new Map([
     // TODO: Implement JAL
   }]
 ]);
+
+const opcodeTypeTable = new Map<number, InstructionType>([
+  [0x03, InstructionType.I],
+  [0x13, InstructionType.I],
+  [0x17, InstructionType.U],
+  [0x23, InstructionType.S],
+  [0x33, InstructionType.R],
+  [0x37, InstructionType.U],
+  [0x63, InstructionType.B],
+  [0x67, InstructionType.I],
+  [0x6F, InstructionType.J],
+  [0x73, InstructionType.I],
+])

@@ -68,11 +68,11 @@ export class R_Type extends Instruction {
   }
 
   get rd() {
-    return getRange(this.binary, 11, 6);
+    return getRange(this.binary, 11, 7);
   }
 
   set rd(value: number) {
-    this.binary = setRange(this.binary, value, 11, 6);
+    this.binary = setRange(this.binary, value, 11, 7);
   }
 
   get func3() {
@@ -124,11 +124,11 @@ export class I_Type extends Instruction implements HasImmediate {
   }
 
   get rd() {
-    return getRange(this.binary, 11, 6);
+    return getRange(this.binary, 11, 7);
   }
 
   set rd(value: number) {
-    this.binary = setRange(this.binary, value, 11, 6);
+    this.binary = setRange(this.binary, value, 11, 7);
   }
 
   get func3() {
@@ -292,11 +292,11 @@ export class U_Type extends Instruction implements HasImmediate {
   }
 
   get rd() {
-    return getRange(this.binary, 11, 6);
+    return getRange(this.binary, 11, 7);
   }
 
   set rd(value: number) {
-    this.binary = setRange(this.binary, value, 11, 6);
+    this.binary = setRange(this.binary, value, 11, 7);
   }
 
   get imm() {
@@ -319,11 +319,11 @@ export class J_Type extends Instruction implements HasImmediate {
   }
 
   get rd() {
-    return getRange(this.binary, 11, 6);;
+    return getRange(this.binary, 11, 7);;
   }
 
   set rd(value: number) {
-    this.binary = setRange(this.binary, value, 11, 6);
+    this.binary = setRange(this.binary, value, 11, 7);
   }
 
   get imm() {
