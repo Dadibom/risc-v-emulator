@@ -509,7 +509,6 @@ const opcode0x63func3Table: FuncTable<B_Type> = new Map([
     } else {
       cpu.pc += 4;
     }
-
   }],
 
   [0x1, (instruction: B_Type, cpu: CPU) => {
@@ -585,7 +584,13 @@ const opcode0x63func3Table: FuncTable<B_Type> = new Map([
 
 const opcode0x67func3Table: FuncTable<I_Type> = new Map([
   [0x0, (instruction: I_Type, cpu: CPU) => {
-    // TODO: Implement JALR
+    const { rd, rs1, imm } = instruction;
+    const { registerSet } = cpu;
+
+    const rs1Value = registerSet.getRegister(rs1);
+
+    registerSet.setRegister(rd, cpu.pc + 4);
+    cpu.pc = rs1Value + imm;
   }]
 ]);
 
