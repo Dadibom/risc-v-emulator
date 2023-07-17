@@ -621,11 +621,17 @@ const b_TypeOpcodeTable: OpcodeFuncTable<B_Type> = new Map([
 
 const u_TypeOpcodeTable: OpcodeTable<U_Type> = new Map([
   [0x37, (instruction: U_Type, cpu: CPU) => {
-    // TODO: Implement LUI
+    const { rd, imm } = instruction;
+    const { registerSet } = cpu;
+
+    registerSet.setRegister(rd, imm);
   }],
 
   [0x17, (instruction: U_Type, cpu: CPU) => {
-    // TODO: Implement AUIPC
+    const { rd, imm } = instruction;
+    const { registerSet } = cpu;
+
+    registerSet.setRegister(rd, imm + cpu.pc);
   }]
 ]); 
 
