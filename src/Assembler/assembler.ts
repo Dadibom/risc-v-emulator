@@ -25,7 +25,10 @@ export function assemble(asm: string[]): ArrayBuffer {
 // Convert a single assembly instruction to machine code
 export function assembleLine(asm: string): Instruction {
 
-  const tokens = asm.toLowerCase().replace(/,/g, '').split(' ');
+  const tokens = asm.toLowerCase()
+    .replace(/,/g, '')
+    .replace(/\(|\)/g, ' ')
+    .split(' ');
   const baseValues = instructionTable.get(tokens[0]);
 
   if (baseValues === undefined) {
@@ -45,16 +48,50 @@ export function assembleLine(asm: string): Instruction {
       break;
 
     case InstructionType.I:
-      instruction = new I_Type({
-        ...baseValues, 
-        // TODO implement logic for assembling I-Type instructions
-      });
+
+      switch (i_Subtypes.get(tokens[0])!! as ImmediateSubtypes) {
+        case ImmediateSubtypes.Normal:
+          instruction = new I_Type({
+            ...baseValues, 
+            rd: parseRegister(tokens[1]),
+            rs1: parseRegister(tokens[2]),
+            imm: parseInt(tokens[3])
+          });
+          break;
+
+        case ImmediateSubtypes.Indexed:
+          instruction = new I_Type({
+            ...baseValues, 
+            rd: parseRegister(tokens[1]),
+            imm: parseInt(tokens[2]),
+            rs1: parseRegister(tokens[3])
+          });
+          break;
+
+        case ImmediateSubtypes.Shamt:
+          instruction = new I_Type({
+            ...baseValues, 
+            rd: parseRegister(tokens[1]),
+            rs1: parseRegister(tokens[2]),
+            shamt: parseInt(tokens[3])
+          });
+          break;
+
+        case ImmediateSubtypes.Ecall:
+          instruction = new I_Type({
+            ...baseValues
+          });
+          break;
+
+      }
       break;
 
     case InstructionType.S:
       instruction = new S_Type({
         ...baseValues, 
-        // TODO implement logic for assembling S-Type instructions
+        rs2: parseRegister(tokens[1]),
+        imm: parseInt(tokens[2]),
+        rs1: parseRegister(tokens[3])
       });
       break;
 
@@ -196,7 +233,7 @@ const instructionTable = new Map<string, InstructionValues>([
   ['auipc', { type: InstructionType.U, opcode: 0x17 }],
 
   ['jal',   { type: InstructionType.J, opcode: 0x6F }],
-  ['jalr',  { type: InstructionType.I, opcode: 0x6F, func3: 0x0 }],
+  ['jalr',  { type: InstructionType.I, opcode: 0x67, func3: 0x0 }],
 
   ['beq',   { type: InstructionType.B, opcode: 0x63, func3: 0x0 }],
   ['bne',   { type: InstructionType.B, opcode: 0x63, func3: 0x1 }],
@@ -237,4 +274,35 @@ const instructionTable = new Map<string, InstructionValues>([
   ['and',   { type: InstructionType.R, opcode: 0x33, func3: 0x7, func7: 0x00 }],
 
   ['ecall', { type: InstructionType.I,  opcode: 0x73, func3: 0x0, func7: 0x00 }],
+])
+
+enum ImmediateSubtypes {
+  Normal,
+  Shamt,
+  Indexed,
+  Ecall
+}
+
+const i_Subtypes = new Map<string, ImmediateSubtypes>([
+
+  ['jalr',  ImmediateSubtypes.Indexed],
+
+  ['lb',    ImmediateSubtypes.Indexed],
+  ['lh',    ImmediateSubtypes.Indexed],
+  ['lw',    ImmediateSubtypes.Indexed],
+  ['lbu',   ImmediateSubtypes.Indexed],
+  ['lhu',   ImmediateSubtypes.Indexed],
+
+  ['addi',  ImmediateSubtypes.Normal],
+  ['slti',  ImmediateSubtypes.Normal],
+  ['sltiu', ImmediateSubtypes.Normal],
+  ['xori',  ImmediateSubtypes.Normal],
+  ['ori',   ImmediateSubtypes.Normal],
+  ['andi',  ImmediateSubtypes.Normal],
+
+  ['slli',  ImmediateSubtypes.Shamt],
+  ['srli',  ImmediateSubtypes.Shamt],
+  ['srai',  ImmediateSubtypes.Shamt],
+
+  ['ecall', ImmediateSubtypes.Ecall],
 ])

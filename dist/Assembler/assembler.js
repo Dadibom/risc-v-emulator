@@ -18,7 +18,10 @@ function assemble(asm) {
 exports.assemble = assemble;
 // Convert a single assembly instruction to machine code
 function assembleLine(asm) {
-    const tokens = asm.toLowerCase().replace(/,/g, '').split(' ');
+    const tokens = asm.toLowerCase()
+        .replace(/,/g, '')
+        .replace(/\(|\)/g, ' ')
+        .split(' ');
     const baseValues = instructionTable.get(tokens[0]);
     if (baseValues === undefined) {
         throw new Error(`Instruction not found in instruction table; instruction provided: ${tokens[0]}`);
@@ -29,10 +32,23 @@ function assembleLine(asm) {
             instruction = new instruction_1.R_Type(Object.assign(Object.assign({}, baseValues), { rd: parseRegister(tokens[1]), rs1: parseRegister(tokens[2]), rs2: parseRegister(tokens[3]) }));
             break;
         case instruction_1.InstructionType.I:
-            instruction = new instruction_1.I_Type(Object.assign({}, baseValues));
+            switch (i_Subtypes.get(tokens[0])) {
+                case ImmediateSubtypes.Normal:
+                    instruction = new instruction_1.I_Type(Object.assign(Object.assign({}, baseValues), { rd: parseRegister(tokens[1]), rs1: parseRegister(tokens[2]), imm: parseInt(tokens[3]) }));
+                    break;
+                case ImmediateSubtypes.Indexed:
+                    instruction = new instruction_1.I_Type(Object.assign(Object.assign({}, baseValues), { rd: parseRegister(tokens[1]), imm: parseInt(tokens[2]), rs1: parseRegister(tokens[3]) }));
+                    break;
+                case ImmediateSubtypes.Shamt:
+                    instruction = new instruction_1.I_Type(Object.assign(Object.assign({}, baseValues), { rd: parseRegister(tokens[1]), rs1: parseRegister(tokens[2]), shamt: parseInt(tokens[3]) }));
+                    break;
+                case ImmediateSubtypes.Ecall:
+                    instruction = new instruction_1.I_Type(Object.assign({}, baseValues));
+                    break;
+            }
             break;
         case instruction_1.InstructionType.S:
-            instruction = new instruction_1.S_Type(Object.assign({}, baseValues));
+            instruction = new instruction_1.S_Type(Object.assign(Object.assign({}, baseValues), { rs2: parseRegister(tokens[1]), imm: parseInt(tokens[2]), rs1: parseRegister(tokens[3]) }));
             break;
         case instruction_1.InstructionType.B:
             instruction = new instruction_1.B_Type(Object.assign(Object.assign({}, baseValues), { rs1: parseRegister(tokens[1]), rs2: parseRegister(tokens[2]), imm: parseInt(tokens[3]) }));
@@ -147,7 +163,7 @@ const instructionTable = new Map([
     ['lui', { type: instruction_1.InstructionType.U, opcode: 0x37 }],
     ['auipc', { type: instruction_1.InstructionType.U, opcode: 0x17 }],
     ['jal', { type: instruction_1.InstructionType.J, opcode: 0x6F }],
-    ['jalr', { type: instruction_1.InstructionType.I, opcode: 0x6F, func3: 0x0 }],
+    ['jalr', { type: instruction_1.InstructionType.I, opcode: 0x67, func3: 0x0 }],
     ['beq', { type: instruction_1.InstructionType.B, opcode: 0x63, func3: 0x0 }],
     ['bne', { type: instruction_1.InstructionType.B, opcode: 0x63, func3: 0x1 }],
     ['blt', { type: instruction_1.InstructionType.B, opcode: 0x63, func3: 0x4 }],
@@ -182,4 +198,29 @@ const instructionTable = new Map([
     ['or', { type: instruction_1.InstructionType.R, opcode: 0x33, func3: 0x6, func7: 0x00 }],
     ['and', { type: instruction_1.InstructionType.R, opcode: 0x33, func3: 0x7, func7: 0x00 }],
     ['ecall', { type: instruction_1.InstructionType.I, opcode: 0x73, func3: 0x0, func7: 0x00 }],
+]);
+var ImmediateSubtypes;
+(function (ImmediateSubtypes) {
+    ImmediateSubtypes[ImmediateSubtypes["Normal"] = 0] = "Normal";
+    ImmediateSubtypes[ImmediateSubtypes["Shamt"] = 1] = "Shamt";
+    ImmediateSubtypes[ImmediateSubtypes["Indexed"] = 2] = "Indexed";
+    ImmediateSubtypes[ImmediateSubtypes["Ecall"] = 3] = "Ecall";
+})(ImmediateSubtypes || (ImmediateSubtypes = {}));
+const i_Subtypes = new Map([
+    ['jalr', ImmediateSubtypes.Indexed],
+    ['lb', ImmediateSubtypes.Indexed],
+    ['lh', ImmediateSubtypes.Indexed],
+    ['lw', ImmediateSubtypes.Indexed],
+    ['lbu', ImmediateSubtypes.Indexed],
+    ['lhu', ImmediateSubtypes.Indexed],
+    ['addi', ImmediateSubtypes.Normal],
+    ['slti', ImmediateSubtypes.Normal],
+    ['sltiu', ImmediateSubtypes.Normal],
+    ['xori', ImmediateSubtypes.Normal],
+    ['ori', ImmediateSubtypes.Normal],
+    ['andi', ImmediateSubtypes.Normal],
+    ['slli', ImmediateSubtypes.Shamt],
+    ['srli', ImmediateSubtypes.Shamt],
+    ['srai', ImmediateSubtypes.Shamt],
+    ['ecall', ImmediateSubtypes.Ecall],
 ]);
