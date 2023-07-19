@@ -65,7 +65,7 @@ returns the value of the register as a signed 32-bit integer. The register at in
 
 returns the value of the register as an unsigned 32-bit integer. The register at index 0 always returns a value of 0.
 
-### `setRegister(index: number, value: number): number`
+### `setRegister(index: number, value: number)`
 
 `index` - The index of the register being accessed
 
@@ -73,7 +73,7 @@ returns the value of the register as an unsigned 32-bit integer. The register at
 
 Sets the value of the register at the specified `index` to `value` as a signed 32-bit integer. Setting the value of the register at index 0 has no effect.
 
-### `setRegisterU(index: number, value: number): number`
+### `setRegisterU(index: number, value: number)`
 
 `index` - The index of the register being accessed
 
