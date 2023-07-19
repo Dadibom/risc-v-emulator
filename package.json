@@ -2,6 +2,11 @@
   "name": "@aloeminium108/risc-v-emulator",
   "version": "1.0.0",
   "description": "An emulator for the RISC-V instruction set architecture",
+  "keywords": [
+    "risc-v",
+    "emulator",
+    "assembler"
+  ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
