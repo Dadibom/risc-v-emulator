@@ -81,7 +81,7 @@ Sets the value of the register at the specified `index` to `value` as a signed 3
 
 Sets the value of the register at the specified `index` to `value` as an unsigned 32-bit integer. Setting the value of the register at index 0 has no effect.
 
-## Assembler
+## `Assembler`
 
 Contains static methods for converting programs written in the RISC-V assembly language to binary machine code. These methods are currently very limited; pseudo-instructions, symbols, labels, and sections are not yet supported.
 
