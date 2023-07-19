@@ -16,7 +16,7 @@ describe('Testing R-Type instruction execution:', () => {
         cpu.registerSet.setRegister(2, 5);
         expect(cpu.registerSet.getRegister(1)).toBe(3);
         expect(cpu.registerSet.getRegister(2)).toBe(5);
-        const addInstruction = (0, assembler_1.assembleLine)('add x3, x1, x2');
+        const addInstruction = assembler_1.Assembler.assembleLine('add x3, x1, x2');
         cpu.executeInstruction(addInstruction.binary);
         expect(cpu.registerSet.getRegister(3)).toBe(8);
     });
@@ -33,7 +33,7 @@ describe('Testing basic toy programs:', () => {
             'add zero, zero, x1',
             'add zero, zero, x1',
         ];
-        const bin = (0, assembler_1.assemble)(program);
+        const bin = assembler_1.Assembler.assemble(program);
         const cpu = new cpu_1.CPU(bin, 0);
         cpu.registerSet.setRegister(1, 5);
         cpu.registerSet.setRegister(2, -8);

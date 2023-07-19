@@ -1,4 +1,4 @@
-import { assemble, assembleLine } from "../Assembler/assembler";
+import { Assembler } from "../Assembler/assembler";
 import { CPU, RegisterSet } from "../cpu";
 
 describe('Testing RegisterSet class:', () => {
@@ -25,7 +25,7 @@ describe('Testing R-Type instruction execution:', () => {
     expect(cpu.registerSet.getRegister(1)).toBe(3);
     expect(cpu.registerSet.getRegister(2)).toBe(5);
 
-    const addInstruction = assembleLine('add x3, x1, x2');
+    const addInstruction = Assembler.assembleLine('add x3, x1, x2');
 
     cpu.executeInstruction(addInstruction.binary);
 
@@ -49,7 +49,7 @@ describe('Testing basic toy programs:', () => {
       'add zero, zero, x1',
     ]
 
-    const bin = assemble(program);
+    const bin = Assembler.assemble(program);
 
     const cpu = new CPU(bin, 0);
 

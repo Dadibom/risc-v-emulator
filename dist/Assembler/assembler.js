@@ -1,68 +1,69 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.assembleLine = exports.assemble = void 0;
+exports.Assembler = void 0;
 const instruction_1 = require("./instruction");
-// Convert a a set of assembly instructions to machine code
-function assemble(asm) {
-    //const parsedAssembly = parse(asm);
-    // TODO: link symbols, labels, sections, files etc.
-    const parsedAssembly = asm;
-    const binaryBuffer = new ArrayBuffer(parsedAssembly.length * 4);
-    const binView = new DataView(binaryBuffer);
-    parsedAssembly.forEach((line, index) => {
-        const machineCode = assembleLine(line);
-        binView.setInt32(index * 4, machineCode.binary, true);
-    });
-    return binaryBuffer;
-}
-exports.assemble = assemble;
-// Convert a single assembly instruction to machine code
-function assembleLine(asm) {
-    const tokens = asm.toLowerCase()
-        .replace(/,/g, '')
-        .replace(/\(|\)/g, ' ')
-        .split(' ');
-    const baseValues = instructionTable.get(tokens[0]);
-    if (baseValues === undefined) {
-        throw new Error(`Instruction not found in instruction table; instruction provided: ${tokens[0]}`);
+class Assembler {
+    // Convert a a set of assembly instructions to machine code
+    static assemble(asm) {
+        //const parsedAssembly = parse(asm);
+        // TODO: link symbols, labels, sections, files etc.
+        const parsedAssembly = asm;
+        const binaryBuffer = new ArrayBuffer(parsedAssembly.length * 4);
+        const binView = new DataView(binaryBuffer);
+        parsedAssembly.forEach((line, index) => {
+            const machineCode = this.assembleLine(line);
+            binView.setInt32(index * 4, machineCode.binary, true);
+        });
+        return binaryBuffer;
     }
-    let instruction;
-    switch (baseValues.type) {
-        case instruction_1.InstructionType.R:
-            instruction = new instruction_1.R_Type(Object.assign(Object.assign({}, baseValues), { rd: parseRegister(tokens[1]), rs1: parseRegister(tokens[2]), rs2: parseRegister(tokens[3]) }));
-            break;
-        case instruction_1.InstructionType.I:
-            switch (i_Subtypes.get(tokens[0])) {
-                case ImmediateSubtypes.Normal:
-                    instruction = new instruction_1.I_Type(Object.assign(Object.assign({}, baseValues), { rd: parseRegister(tokens[1]), rs1: parseRegister(tokens[2]), imm: parseInt(tokens[3]) }));
-                    break;
-                case ImmediateSubtypes.Indexed:
-                    instruction = new instruction_1.I_Type(Object.assign(Object.assign({}, baseValues), { rd: parseRegister(tokens[1]), imm: parseInt(tokens[2]), rs1: parseRegister(tokens[3]) }));
-                    break;
-                case ImmediateSubtypes.Shamt:
-                    instruction = new instruction_1.I_Type(Object.assign(Object.assign({}, baseValues), { rd: parseRegister(tokens[1]), rs1: parseRegister(tokens[2]), shamt: parseInt(tokens[3]) }));
-                    break;
-                case ImmediateSubtypes.Ecall:
-                    instruction = new instruction_1.I_Type(Object.assign({}, baseValues));
-                    break;
-            }
-            break;
-        case instruction_1.InstructionType.S:
-            instruction = new instruction_1.S_Type(Object.assign(Object.assign({}, baseValues), { rs2: parseRegister(tokens[1]), imm: parseInt(tokens[2]), rs1: parseRegister(tokens[3]) }));
-            break;
-        case instruction_1.InstructionType.B:
-            instruction = new instruction_1.B_Type(Object.assign(Object.assign({}, baseValues), { rs1: parseRegister(tokens[1]), rs2: parseRegister(tokens[2]), imm: parseInt(tokens[3]) }));
-            break;
-        case instruction_1.InstructionType.U:
-            instruction = new instruction_1.U_Type(Object.assign(Object.assign({}, baseValues), { rd: parseRegister(tokens[1]), imm: parseInt(tokens[2]) }));
-            break;
-        case instruction_1.InstructionType.J:
-            instruction = new instruction_1.J_Type(Object.assign(Object.assign({}, baseValues), { rd: parseRegister(tokens[1]), imm: parseInt(tokens[2]) }));
-            break;
+    // Convert a single assembly instruction to machine code
+    static assembleLine(asm) {
+        const tokens = asm.toLowerCase()
+            .replace(/,/g, '')
+            .replace(/\(|\)/g, ' ')
+            .split(' ');
+        const baseValues = instructionTable.get(tokens[0]);
+        if (baseValues === undefined) {
+            throw new Error(`Instruction not found in instruction table; instruction provided: ${tokens[0]}`);
+        }
+        let instruction;
+        switch (baseValues.type) {
+            case instruction_1.InstructionType.R:
+                instruction = new instruction_1.R_Type(Object.assign(Object.assign({}, baseValues), { rd: parseRegister(tokens[1]), rs1: parseRegister(tokens[2]), rs2: parseRegister(tokens[3]) }));
+                break;
+            case instruction_1.InstructionType.I:
+                switch (i_Subtypes.get(tokens[0])) {
+                    case ImmediateSubtypes.Normal:
+                        instruction = new instruction_1.I_Type(Object.assign(Object.assign({}, baseValues), { rd: parseRegister(tokens[1]), rs1: parseRegister(tokens[2]), imm: parseInt(tokens[3]) }));
+                        break;
+                    case ImmediateSubtypes.Indexed:
+                        instruction = new instruction_1.I_Type(Object.assign(Object.assign({}, baseValues), { rd: parseRegister(tokens[1]), imm: parseInt(tokens[2]), rs1: parseRegister(tokens[3]) }));
+                        break;
+                    case ImmediateSubtypes.Shamt:
+                        instruction = new instruction_1.I_Type(Object.assign(Object.assign({}, baseValues), { rd: parseRegister(tokens[1]), rs1: parseRegister(tokens[2]), shamt: parseInt(tokens[3]) }));
+                        break;
+                    case ImmediateSubtypes.Ecall:
+                        instruction = new instruction_1.I_Type(Object.assign({}, baseValues));
+                        break;
+                }
+                break;
+            case instruction_1.InstructionType.S:
+                instruction = new instruction_1.S_Type(Object.assign(Object.assign({}, baseValues), { rs2: parseRegister(tokens[1]), imm: parseInt(tokens[2]), rs1: parseRegister(tokens[3]) }));
+                break;
+            case instruction_1.InstructionType.B:
+                instruction = new instruction_1.B_Type(Object.assign(Object.assign({}, baseValues), { rs1: parseRegister(tokens[1]), rs2: parseRegister(tokens[2]), imm: parseInt(tokens[3]) }));
+                break;
+            case instruction_1.InstructionType.U:
+                instruction = new instruction_1.U_Type(Object.assign(Object.assign({}, baseValues), { rd: parseRegister(tokens[1]), imm: parseInt(tokens[2]) }));
+                break;
+            case instruction_1.InstructionType.J:
+                instruction = new instruction_1.J_Type(Object.assign(Object.assign({}, baseValues), { rd: parseRegister(tokens[1]), imm: parseInt(tokens[2]) }));
+                break;
+        }
+        return instruction;
     }
-    return instruction;
 }
-exports.assembleLine = assembleLine;
+exports.Assembler = Assembler;
 /*
 =====================================================
 ===============   Register Aliases:   ===============

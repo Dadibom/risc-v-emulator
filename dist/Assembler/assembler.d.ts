@@ -1,3 +1,5 @@
 import { Instruction } from "./instruction";
-export declare function assemble(asm: string[]): ArrayBuffer;
-export declare function assembleLine(asm: string): Instruction;
+export declare class Assembler {
+    static assemble(asm: string[]): ArrayBuffer;
+    static assembleLine(asm: string): Instruction;
+}
