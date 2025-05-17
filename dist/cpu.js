@@ -155,7 +155,7 @@ const opcode0x03func3Table = new Map([
             const { registerSet, ram } = cpu;
             const { rd, rs1, imm } = instruction;
             const rs1Value = registerSet.getRegister(rs1);
-            const half = ram.getInt16(rs1Value + imm);
+            const half = ram.getInt16(rs1Value + imm, true);
             registerSet.setRegister(rd, half);
             cpu.pc += 4;
         }],
@@ -163,7 +163,7 @@ const opcode0x03func3Table = new Map([
             const { registerSet, ram } = cpu;
             const { rd, rs1, imm } = instruction;
             const rs1Value = registerSet.getRegister(rs1);
-            const word = ram.getInt32(rs1Value + imm);
+            const word = ram.getInt32(rs1Value + imm, true);
             registerSet.setRegister(rd, word);
             cpu.pc += 4;
         }],
@@ -179,7 +179,7 @@ const opcode0x03func3Table = new Map([
             const { registerSet, ram } = cpu;
             const { rd, rs1, imm } = instruction;
             const rs1Value = registerSet.getRegister(rs1);
-            const half = ram.getUint16(rs1Value + imm);
+            const half = ram.getUint16(rs1Value + imm, true);
             registerSet.setRegister(rd, half);
             cpu.pc += 4;
         }],
@@ -271,14 +271,14 @@ const opcode0x23func3Table = new Map([
             const rs1Value = registerSet.getRegister(rs1);
             const rs2Value = registerSet.getRegister(rs2);
             const half = (0, binaryFunctions_1.getRange)(rs2Value, 15, 0);
-            ram.setInt16(rs1Value + imm, half);
+            ram.setInt16(rs1Value + imm, half, true);
         }],
     [0x2, (instruction, cpu) => {
             const { rs1, rs2, imm } = instruction;
             const { registerSet, ram } = cpu;
             const rs1Value = registerSet.getRegister(rs1);
             const rs2Value = registerSet.getRegister(rs2);
-            ram.setInt32(rs1Value + imm, rs2Value);
+            ram.setInt32(rs1Value + imm, rs2Value, true);
         }],
 ]);
 const opcode0x33func3Table = new Map([

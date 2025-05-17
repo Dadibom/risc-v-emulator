@@ -159,7 +159,7 @@ class S_Type extends Instruction {
         return (0, binaryFunctions_1.signExtend)(this.immU, 12);
     }
     get immU() {
-        return (0, binaryFunctions_1.getRange)(this.binary, 11, 7) + ((0, binaryFunctions_1.getRange)(this.binary, 31, 25) << 13);
+        return (0, binaryFunctions_1.getRange)(this.binary, 11, 7) + ((0, binaryFunctions_1.getRange)(this.binary, 31, 25) << 5);
     }
     set imm(value) {
         const imm5 = (0, binaryFunctions_1.getRange)(value, 4, 0);
