@@ -1,5 +1,7 @@
 // Returns bits from 32-bit input in specified range
 export function getRange(input: number, upperEnd: number, lowerEnd: number): number {
+  /*
+  @TODO keep checks for range only during testing/development
   if (
     upperEnd > 31 ||
     lowerEnd < 0 ||
@@ -8,6 +10,7 @@ export function getRange(input: number, upperEnd: number, lowerEnd: number): num
   ) {
     throw new Error('Specified range not possible');
   }
+  */
 
   let result = input;
 
@@ -22,6 +25,8 @@ export function getRange(input: number, upperEnd: number, lowerEnd: number): num
 
 // Sets bits from 32-bit input in specified range to provided value
 export function setRange(input: number, value: number, upperEnd: number, lowerEnd: number): number {
+  /*
+  @TODO keep checks for range and value only during testing/development
   if (
     upperEnd > 31 ||
     lowerEnd < 0 ||
@@ -34,13 +39,10 @@ export function setRange(input: number, value: number, upperEnd: number, lowerEn
   if (value > (2 ** (1 + upperEnd - lowerEnd)) - 1) {
     throw new Error(`Value does not fit within specified range; max value: ${(2 ** (1 + upperEnd - lowerEnd)) - 1}, value supplied: ${value}`);
   }
+  */
 
-  const lowerMask = 0xFFFFFFFF >>> (31 - lowerEnd);
-  const upperMask = 0xFFFFFFFF << upperEnd;
-  const bitMask = lowerMask | upperMask;
-
-  return (input & bitMask) | (value << lowerEnd);
-
+  const mask = ~(((1 << (upperEnd - lowerEnd + 1)) - 1) << lowerEnd);
+  return (input & mask) | ((value & ((1 << (upperEnd - lowerEnd + 1)) - 1)) << lowerEnd);
 }
 
 // Returns specified bit from 32-bit input

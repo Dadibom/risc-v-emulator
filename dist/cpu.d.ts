@@ -13,8 +13,7 @@ export declare class CPU {
     private executeJ_Type;
 }
 export declare class RegisterSet {
-    private registerBuffer;
-    private registerView;
+    private registers;
     constructor(numRegisters: number);
     getRegister(index: number): number;
     getRegisterU(index: number): number;

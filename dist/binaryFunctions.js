@@ -3,12 +3,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.signExtend = exports.setBit = exports.getBit = exports.setRange = exports.getRange = void 0;
 // Returns bits from 32-bit input in specified range
 function getRange(input, upperEnd, lowerEnd) {
-    if (upperEnd > 31 ||
-        lowerEnd < 0 ||
-        lowerEnd > upperEnd ||
-        lowerEnd === upperEnd) {
-        throw new Error('Specified range not possible');
+    /*
+    @TODO keep checks for range only during testing/development
+    if (
+      upperEnd > 31 ||
+      lowerEnd < 0 ||
+      lowerEnd > upperEnd ||
+      lowerEnd === upperEnd
+    ) {
+      throw new Error('Specified range not possible');
     }
+    */
     let result = input;
     if (upperEnd < 31) {
         const bitmask = 0xFFFFFFFF >>> (31 - upperEnd);
@@ -19,19 +24,23 @@ function getRange(input, upperEnd, lowerEnd) {
 exports.getRange = getRange;
 // Sets bits from 32-bit input in specified range to provided value
 function setRange(input, value, upperEnd, lowerEnd) {
-    if (upperEnd > 31 ||
-        lowerEnd < 0 ||
-        lowerEnd > upperEnd ||
-        lowerEnd === upperEnd) {
-        throw new Error('Specified range not possible');
+    /*
+    @TODO keep checks for range and value only during testing/development
+    if (
+      upperEnd > 31 ||
+      lowerEnd < 0 ||
+      lowerEnd > upperEnd ||
+      lowerEnd === upperEnd
+    ) {
+      throw new Error('Specified range not possible');
     }
+  
     if (value > (2 ** (1 + upperEnd - lowerEnd)) - 1) {
-        throw new Error(`Value does not fit within specified range; max value: ${(2 ** (1 + upperEnd - lowerEnd)) - 1}, value supplied: ${value}`);
+      throw new Error(`Value does not fit within specified range; max value: ${(2 ** (1 + upperEnd - lowerEnd)) - 1}, value supplied: ${value}`);
     }
-    const lowerMask = 0xFFFFFFFF >>> (31 - lowerEnd);
-    const upperMask = 0xFFFFFFFF << upperEnd;
-    const bitMask = lowerMask | upperMask;
-    return (input & bitMask) | (value << lowerEnd);
+    */
+    const mask = ~(((1 << (upperEnd - lowerEnd + 1)) - 1) << lowerEnd);
+    return (input & mask) | ((value & ((1 << (upperEnd - lowerEnd + 1)) - 1)) << lowerEnd);
 }
 exports.setRange = setRange;
 // Returns specified bit from 32-bit input

@@ -14,483 +14,471 @@ class CPU {
         this.executeInstruction(instruction);
     }
     executeInstruction(instruction) {
-        const instructionType = opcodeTypeTable.get((0, binaryFunctions_1.getRange)(instruction, 6, 0));
-        switch (instructionType) {
-            case instruction_1.InstructionType.R:
-                this.executeR_Type(new instruction_1.R_Type({ binary: instruction }));
+        const opcode = (0, binaryFunctions_1.getRange)(instruction, 6, 0);
+        switch (opcode) {
+            case 0x03:
+            case 0x13:
+            case 0x67:
+            case 0x73:
+                this.executeI_Type(opcode, new instruction_1.I_Type({ binary: instruction }));
                 break;
-            case instruction_1.InstructionType.I:
-                this.executeI_Type(new instruction_1.I_Type({ binary: instruction }));
+            case 0x17:
+            case 0x37:
+                this.executeU_Type(opcode, new instruction_1.U_Type({ binary: instruction }));
                 break;
-            case instruction_1.InstructionType.S:
-                this.executeS_Type(new instruction_1.S_Type({ binary: instruction }));
+            case 0x23:
+                this.executeS_Type(opcode, new instruction_1.S_Type({ binary: instruction }));
                 break;
-            case instruction_1.InstructionType.B:
-                this.executeB_Type(new instruction_1.B_Type({ binary: instruction }));
+            case 0x33:
+                this.executeR_Type(opcode, new instruction_1.R_Type({ binary: instruction }));
                 break;
-            case instruction_1.InstructionType.U:
-                this.executeU_Type(new instruction_1.U_Type({ binary: instruction }));
+            case 0x63:
+                this.executeB_Type(opcode, new instruction_1.B_Type({ binary: instruction }));
                 break;
-            case instruction_1.InstructionType.J:
-                this.executeJ_Type(new instruction_1.J_Type({ binary: instruction }));
+            case 0x6F:
+                this.executeJ_Type(opcode, new instruction_1.J_Type({ binary: instruction }));
                 break;
+            default:
+                throw new Error('Invalid Instruction');
         }
     }
-    executeR_Type(instruction) {
-        const { opcode, func3 } = instruction;
-        // Get func3 lookup table for R_Type instructions
-        const funcTable = r_TypeOpcodeTable.get(opcode);
-        const operation = funcTable === null || funcTable === void 0 ? void 0 : funcTable.get(func3);
-        if (operation !== undefined) {
-            operation(instruction, this);
+    executeR_Type(opcode, instruction) {
+        const { func3 } = instruction;
+        if (opcode !== 0x33) {
+            throw new Error('Invalid Instruction');
         }
-        else {
-            console.log('WARNING: Invalid Instruction');
+        switch (func3) {
+            case 0x0: {
+                const { rd, rs1, rs2, func7 } = instruction;
+                const { registerSet } = this;
+                const rs1Value = registerSet.getRegister(rs1);
+                const rs2Value = registerSet.getRegister(rs2);
+                if (func7 === 0x00) {
+                    const sum = rs1Value + rs2Value;
+                    registerSet.setRegister(rd, sum);
+                }
+                else if (func7 === 0x20) {
+                    const difference = registerSet.getRegister(rs1) - registerSet.getRegister(rs2);
+                    registerSet.setRegister(rd, difference);
+                }
+                break;
+            }
+            case 0x1: {
+                const { rd, rs1, rs2 } = instruction;
+                const { registerSet } = this;
+                const rs1Value = registerSet.getRegister(rs1);
+                const rs2Value = registerSet.getRegisterU(rs2);
+                const result = rs1Value << rs2Value;
+                registerSet.setRegister(rd, result);
+                break;
+            }
+            case 0x2: {
+                const { rd, rs1, rs2 } = instruction;
+                const { registerSet } = this;
+                const rs1Value = registerSet.getRegister(rs1);
+                const rs2Value = registerSet.getRegister(rs2);
+                const result = rs1Value < rs2Value ? 1 : 0;
+                registerSet.setRegister(rd, result);
+                break;
+            }
+            case 0x3: {
+                const { rd, rs1, rs2 } = instruction;
+                const { registerSet } = this;
+                const rs1Value = registerSet.getRegisterU(rs1);
+                const rs2Value = registerSet.getRegisterU(rs2);
+                const result = rs1Value < rs2Value ? 1 : 0;
+                registerSet.setRegister(rd, result);
+                break;
+            }
+            case 0x4: {
+                const { rd, rs1, rs2 } = instruction;
+                const { registerSet } = this;
+                const rs1Value = registerSet.getRegister(rs1);
+                const rs2Value = registerSet.getRegister(rs2);
+                const result = rs1Value ^ rs2Value;
+                registerSet.setRegister(rd, result);
+                break;
+            }
+            case 0x5: {
+                const { rd, rs1, rs2, func7 } = instruction;
+                const { registerSet } = this;
+                const rs1Value = registerSet.getRegister(rs1);
+                const rs2Value = registerSet.getRegister(rs2);
+                if (func7 === 0x00) {
+                    const result = rs1Value >>> rs2Value;
+                    registerSet.setRegister(rd, result);
+                }
+                else if (func7 === 0x20) {
+                    const result = rs1Value >> rs2Value;
+                    registerSet.setRegister(rd, result);
+                }
+                break;
+            }
+            case 0x6: {
+                const { rd, rs1, rs2 } = instruction;
+                const { registerSet } = this;
+                const rs1Value = registerSet.getRegister(rs1);
+                const rs2Value = registerSet.getRegister(rs2);
+                const result = rs1Value | rs2Value;
+                registerSet.setRegister(rd, result);
+                break;
+            }
+            case 0x7: {
+                const { rd, rs1, rs2 } = instruction;
+                const { registerSet } = this;
+                const rs1Value = registerSet.getRegister(rs1);
+                const rs2Value = registerSet.getRegister(rs2);
+                const result = rs1Value & rs2Value;
+                registerSet.setRegister(rd, result);
+                break;
+            }
+            default:
+                throw new Error('Invalid Instruction');
         }
         this.pc += 4;
     }
-    executeI_Type(instruction) {
-        const { opcode, func3 } = instruction;
-        // Get func3 lookup table for I_Type instructions
-        const funcTable = i_TypeOpcodeTable.get(opcode);
-        const operation = funcTable === null || funcTable === void 0 ? void 0 : funcTable.get(func3);
-        if (operation !== undefined) {
-            operation(instruction, this);
-        }
-        else {
-            console.log('WARNING: Invalid Instruction');
+    executeI_Type(opcode, instruction) {
+        const { func3 } = instruction;
+        switch (opcode) {
+            case 0x03:
+                switch (func3) {
+                    case 0x0: {
+                        const { registerSet, ram } = this;
+                        const { rd, rs1, imm } = instruction;
+                        const rs1Value = registerSet.getRegister(rs1);
+                        const byte = ram.getInt8(rs1Value + imm);
+                        registerSet.setRegister(rd, byte);
+                        this.pc += 4;
+                        break;
+                    }
+                    case 0x1: {
+                        const { registerSet, ram } = this;
+                        const { rd, rs1, imm } = instruction;
+                        const rs1Value = registerSet.getRegister(rs1);
+                        const half = ram.getInt16(rs1Value + imm, true);
+                        registerSet.setRegister(rd, half);
+                        this.pc += 4;
+                        break;
+                    }
+                    case 0x2: {
+                        const { registerSet, ram } = this;
+                        const { rd, rs1, imm } = instruction;
+                        const rs1Value = registerSet.getRegister(rs1);
+                        const word = ram.getInt32(rs1Value + imm, true);
+                        registerSet.setRegister(rd, word);
+                        this.pc += 4;
+                        break;
+                    }
+                    case 0x4: {
+                        const { registerSet, ram } = this;
+                        const { rd, rs1, imm } = instruction;
+                        const rs1Value = registerSet.getRegister(rs1);
+                        const byte = ram.getUint8(rs1Value + imm);
+                        registerSet.setRegister(rd, byte);
+                        this.pc += 4;
+                        break;
+                    }
+                    case 0x5: {
+                        const { registerSet, ram } = this;
+                        const { rd, rs1, imm } = instruction;
+                        const rs1Value = registerSet.getRegister(rs1);
+                        const half = ram.getUint16(rs1Value + imm, true);
+                        registerSet.setRegister(rd, half);
+                        this.pc += 4;
+                        break;
+                    }
+                    default:
+                        throw new Error('Invalid Instruction');
+                }
+                return;
+            case 0x13:
+                switch (func3) {
+                    case 0x0: {
+                        const { rd, rs1, imm } = instruction;
+                        const { registerSet } = this;
+                        const rs1Value = registerSet.getRegister(rs1);
+                        const result = rs1Value + imm;
+                        registerSet.setRegister(rd, result);
+                        this.pc += 4;
+                        break;
+                    }
+                    case 0x1: {
+                        const { rd, rs1, shamt } = instruction;
+                        const { registerSet } = this;
+                        const rs1Value = registerSet.getRegister(rs1);
+                        const result = rs1Value << shamt;
+                        registerSet.setRegister(rd, result);
+                        this.pc += 4;
+                        break;
+                    }
+                    case 0x2: {
+                        const { rd, rs1, imm } = instruction;
+                        const { registerSet } = this;
+                        const rs1Value = registerSet.getRegister(rs1);
+                        const result = rs1Value < imm ? 1 : 0;
+                        registerSet.setRegister(rd, result);
+                        this.pc += 4;
+                        break;
+                    }
+                    case 0x3: {
+                        const { rd, rs1, immU } = instruction;
+                        const { registerSet } = this;
+                        const rs1Value = registerSet.getRegisterU(rs1);
+                        const result = rs1Value < immU ? 1 : 0;
+                        registerSet.setRegister(rd, result);
+                        this.pc += 4;
+                        break;
+                    }
+                    case 0x4: {
+                        const { rd, rs1, imm } = instruction;
+                        const { registerSet } = this;
+                        const rs1Value = registerSet.getRegister(rs1);
+                        const result = rs1Value ^ imm;
+                        registerSet.setRegister(rd, result);
+                        this.pc += 4;
+                        break;
+                    }
+                    case 0x5: {
+                        const { rd, rs1, func7, shamt } = instruction;
+                        const { registerSet } = this;
+                        const rs1Value = registerSet.getRegister(rs1);
+                        if (func7 === 0x00) {
+                            const result = rs1Value >>> shamt;
+                            registerSet.setRegister(rd, result);
+                        }
+                        else if (func7 === 0x20) {
+                            const result = rs1Value >> shamt;
+                            registerSet.setRegister(rd, result);
+                        }
+                        this.pc += 4;
+                        break;
+                    }
+                    case 0x6: {
+                        const { rd, rs1, imm } = instruction;
+                        const { registerSet } = this;
+                        const rs1Value = registerSet.getRegister(rs1);
+                        const result = rs1Value | imm;
+                        registerSet.setRegister(rd, result);
+                        this.pc += 4;
+                        break;
+                    }
+                    case 0x7: {
+                        const { rd, rs1, imm } = instruction;
+                        const { registerSet } = this;
+                        const rs1Value = registerSet.getRegister(rs1);
+                        const result = rs1Value & imm;
+                        registerSet.setRegister(rd, result);
+                        this.pc += 4;
+                        break;
+                    }
+                    default:
+                        throw new Error('Invalid Instruction');
+                }
+                return;
+            case 0x67:
+                if (func3 === 0x0) {
+                    const { rd, rs1, imm } = instruction;
+                    const { registerSet } = this;
+                    const rs1Value = registerSet.getRegister(rs1);
+                    registerSet.setRegister(rd, this.pc + 4);
+                    this.pc = rs1Value + imm;
+                    return;
+                }
+                else {
+                    throw new Error('Invalid Instruction');
+                }
+            case 0x73:
+                switch (func3) {
+                    case 0x0: {
+                        // TODO: Implement ECALL
+                        throw new Error('ECALL not implemented');
+                    }
+                    default:
+                        throw new Error('Invalid Instruction');
+                }
+                break;
+            default:
+                throw new Error('Invalid Instruction');
         }
     }
-    executeS_Type(instruction) {
-        const { opcode, func3 } = instruction;
-        // Get func3 lookup table for S_Type instructions
-        const funcTable = s_TypeOpcodeTable.get(opcode);
-        const operation = funcTable === null || funcTable === void 0 ? void 0 : funcTable.get(func3);
-        if (operation !== undefined) {
-            operation(instruction, this);
+    executeS_Type(opcode, instruction) {
+        const { func3 } = instruction;
+        if (opcode !== 0x23) {
+            throw new Error('Invalid Instruction');
         }
-        else {
-            console.log('WARNING: Invalid Instruction');
+        switch (func3) {
+            case 0x0: {
+                const { rs1, rs2, imm } = instruction;
+                const { registerSet, ram } = this;
+                const rs1Value = registerSet.getRegister(rs1);
+                const rs2Value = registerSet.getRegister(rs2);
+                const byte = (0, binaryFunctions_1.getRange)(rs2Value, 7, 0);
+                ram.setInt8(rs1Value + imm, byte);
+                break;
+            }
+            case 0x1: {
+                const { rs1, rs2, imm } = instruction;
+                const { registerSet, ram } = this;
+                const rs1Value = registerSet.getRegister(rs1);
+                const rs2Value = registerSet.getRegister(rs2);
+                const half = (0, binaryFunctions_1.getRange)(rs2Value, 15, 0);
+                ram.setInt16(rs1Value + imm, half, true);
+                break;
+            }
+            case 0x2: {
+                const { rs1, rs2, imm } = instruction;
+                const { registerSet, ram } = this;
+                const rs1Value = registerSet.getRegister(rs1);
+                const rs2Value = registerSet.getRegister(rs2);
+                ram.setInt32(rs1Value + imm, rs2Value, true);
+                break;
+            }
+            default:
+                throw new Error('Invalid Instruction');
         }
         this.pc += 4;
     }
-    executeB_Type(instruction) {
-        const { opcode, func3 } = instruction;
-        // Get func3 lookup table for B_Type instructions
-        const funcTable = b_TypeOpcodeTable.get(opcode);
-        const operation = funcTable === null || funcTable === void 0 ? void 0 : funcTable.get(func3);
-        if (operation !== undefined) {
-            operation(instruction, this);
+    executeB_Type(opcode, instruction) {
+        const { func3 } = instruction;
+        if (opcode !== 0x63) {
+            throw new Error('Invalid Instruction');
         }
-        else {
-            console.log('WARNING: Invalid Instruction');
+        switch (func3) {
+            case 0x0: {
+                const { rs1, rs2, imm } = instruction;
+                const { registerSet } = this;
+                const rs1Value = registerSet.getRegister(rs1);
+                const rs2Value = registerSet.getRegister(rs2);
+                if (rs1Value === rs2Value) {
+                    this.pc += imm;
+                }
+                else {
+                    this.pc += 4;
+                }
+                break;
+            }
+            case 0x1: {
+                const { rs1, rs2, imm } = instruction;
+                const { registerSet } = this;
+                const rs1Value = registerSet.getRegister(rs1);
+                const rs2Value = registerSet.getRegister(rs2);
+                if (rs1Value !== rs2Value) {
+                    this.pc += imm;
+                }
+                else {
+                    this.pc += 4;
+                }
+                break;
+            }
+            case 0x4: {
+                const { rs1, rs2, imm } = instruction;
+                const { registerSet } = this;
+                const rs1Value = registerSet.getRegister(rs1);
+                const rs2Value = registerSet.getRegister(rs2);
+                if (rs1Value < rs2Value) {
+                    this.pc += imm;
+                }
+                else {
+                    this.pc += 4;
+                }
+                break;
+            }
+            case 0x5: {
+                const { rs1, rs2, imm } = instruction;
+                const { registerSet } = this;
+                const rs1Value = registerSet.getRegister(rs1);
+                const rs2Value = registerSet.getRegister(rs2);
+                if (rs1Value >= rs2Value) {
+                    this.pc += imm;
+                }
+                else {
+                    this.pc += 4;
+                }
+                break;
+            }
+            case 0x6: {
+                const { rs1, rs2, imm } = instruction;
+                const { registerSet } = this;
+                const rs1Value = registerSet.getRegisterU(rs1);
+                const rs2Value = registerSet.getRegisterU(rs2);
+                if (rs1Value < rs2Value) {
+                    this.pc += imm;
+                }
+                else {
+                    this.pc += 4;
+                }
+                break;
+            }
+            case 0x7: {
+                const { rs1, rs2, imm } = instruction;
+                const { registerSet } = this;
+                const rs1Value = registerSet.getRegisterU(rs1);
+                const rs2Value = registerSet.getRegisterU(rs2);
+                if (rs1Value >= rs2Value) {
+                    this.pc += imm;
+                }
+                else {
+                    this.pc += 4;
+                }
+                break;
+            }
+            default:
+                throw new Error('Invalid Instruction');
         }
     }
-    executeU_Type(instruction) {
-        const { opcode } = instruction;
-        // Get func3 lookup table for U_Type instructions
-        const operation = u_TypeOpcodeTable.get(opcode);
-        if (operation !== undefined) {
-            operation(instruction, this);
-        }
-        else {
-            console.log('WARNING: Invalid Instruction');
+    executeU_Type(opcode, instruction) {
+        switch (opcode) {
+            case 0x37: {
+                const { rd, imm } = instruction;
+                const { registerSet } = this;
+                registerSet.setRegister(rd, imm);
+                break;
+            }
+            case 0x17: {
+                const { rd, imm } = instruction;
+                const { registerSet } = this;
+                registerSet.setRegister(rd, imm + this.pc);
+                break;
+            }
+            default:
+                throw new Error('Invalid Instruction');
         }
         this.pc += 4;
     }
-    executeJ_Type(instruction) {
-        const { opcode } = instruction;
-        // Get func3 lookup table for J_Type instructions
-        const operation = j_TypeOpcodeTable.get(opcode);
-        if (operation !== undefined) {
-            operation(instruction, this);
+    executeJ_Type(opcode, instruction) {
+        if (opcode !== 0x6F) {
+            throw new Error('Invalid Instruction');
         }
-        else {
-            console.log('WARNING: Invalid Instruction');
-        }
+        const { rd, imm } = instruction;
+        const { registerSet } = this;
+        registerSet.setRegister(rd, this.pc + 4);
+        this.pc += imm;
     }
 }
 exports.CPU = CPU;
 class RegisterSet {
     constructor(numRegisters) {
-        this.registerBuffer = new ArrayBuffer(numRegisters * 4);
-        this.registerView = new DataView(this.registerBuffer);
+        this.registers = new Int32Array(numRegisters);
     }
     getRegister(index) {
-        if (index === 0) {
-            return 0;
-        }
-        return this.registerView.getInt32(index * 4, true);
+        return this.registers[index];
     }
     getRegisterU(index) {
-        if (index === 0) {
-            return 0;
-        }
-        return this.registerView.getUint32(index * 4, true);
+        return this.registers[index] >>> 0; // Convert to unsigned
     }
     setRegister(index, value) {
+        // Register 0 is hardwired to zero in RISC-V. We don't need to check when reading if we're not writing to it.
         if (index === 0) {
             return;
         }
-        this.registerView.setInt32(index * 4, value, true);
+        this.registers[index] = value;
     }
     setRegisterU(index, value) {
+        // Register 0 is hardwired to zero in RISC-V. We don't need to check when reading if we're not writing to it.
         if (index === 0) {
             return;
         }
-        this.registerView.setUint32(index * 4, value, true);
+        this.registers[index] = value;
     }
 }
 exports.RegisterSet = RegisterSet;
-const opcode0x03func3Table = new Map([
-    [0x0, (instruction, cpu) => {
-            const { registerSet, ram } = cpu;
-            const { rd, rs1, imm } = instruction;
-            const rs1Value = registerSet.getRegister(rs1);
-            const byte = ram.getInt8(rs1Value + imm);
-            registerSet.setRegister(rd, byte);
-            cpu.pc += 4;
-        }],
-    [0x1, (instruction, cpu) => {
-            const { registerSet, ram } = cpu;
-            const { rd, rs1, imm } = instruction;
-            const rs1Value = registerSet.getRegister(rs1);
-            const half = ram.getInt16(rs1Value + imm, true);
-            registerSet.setRegister(rd, half);
-            cpu.pc += 4;
-        }],
-    [0x2, (instruction, cpu) => {
-            const { registerSet, ram } = cpu;
-            const { rd, rs1, imm } = instruction;
-            const rs1Value = registerSet.getRegister(rs1);
-            const word = ram.getInt32(rs1Value + imm, true);
-            registerSet.setRegister(rd, word);
-            cpu.pc += 4;
-        }],
-    [0x4, (instruction, cpu) => {
-            const { registerSet, ram } = cpu;
-            const { rd, rs1, imm } = instruction;
-            const rs1Value = registerSet.getRegister(rs1);
-            const byte = ram.getUint8(rs1Value + imm);
-            registerSet.setRegister(rd, byte);
-            cpu.pc += 4;
-        }],
-    [0x5, (instruction, cpu) => {
-            const { registerSet, ram } = cpu;
-            const { rd, rs1, imm } = instruction;
-            const rs1Value = registerSet.getRegister(rs1);
-            const half = ram.getUint16(rs1Value + imm, true);
-            registerSet.setRegister(rd, half);
-            cpu.pc += 4;
-        }],
-]);
-const opcode0x13func3Table = new Map([
-    [0x0, (instruction, cpu) => {
-            const { rd, rs1, imm } = instruction;
-            const { registerSet } = cpu;
-            const rs1Value = registerSet.getRegister(rs1);
-            const result = rs1Value + imm;
-            registerSet.setRegister(rd, result);
-            cpu.pc += 4;
-        }],
-    [0x1, (instruction, cpu) => {
-            const { rd, rs1, shamt } = instruction;
-            const { registerSet } = cpu;
-            const rs1Value = registerSet.getRegister(rs1);
-            const result = rs1Value << shamt;
-            registerSet.setRegister(rd, result);
-            cpu.pc += 4;
-        }],
-    [0x2, (instruction, cpu) => {
-            const { rd, rs1, imm } = instruction;
-            const { registerSet } = cpu;
-            const rs1Value = registerSet.getRegister(rs1);
-            const result = rs1Value < imm ? 1 : 0;
-            registerSet.setRegister(rd, result);
-            cpu.pc += 4;
-        }],
-    [0x3, (instruction, cpu) => {
-            const { rd, rs1, immU } = instruction;
-            const { registerSet } = cpu;
-            const rs1Value = registerSet.getRegisterU(rs1);
-            const result = rs1Value < immU ? 1 : 0;
-            registerSet.setRegister(rd, result);
-            cpu.pc += 4;
-        }],
-    [0x4, (instruction, cpu) => {
-            const { rd, rs1, imm } = instruction;
-            const { registerSet } = cpu;
-            const rs1Value = registerSet.getRegister(rs1);
-            const result = rs1Value ^ imm;
-            registerSet.setRegister(rd, result);
-            cpu.pc += 4;
-        }],
-    [0x5, (instruction, cpu) => {
-            const { rd, rs1, imm, func7, shamt } = instruction;
-            const { registerSet } = cpu;
-            const rs1Value = registerSet.getRegister(rs1);
-            if (func7 === 0x00) {
-                const result = rs1Value >>> shamt;
-                registerSet.setRegister(rd, result);
-            }
-            else if (func7 === 0x20) {
-                const result = rs1Value >> shamt;
-                registerSet.setRegister(rd, result);
-            }
-            cpu.pc += 4;
-        }],
-    [0x6, (instruction, cpu) => {
-            const { rd, rs1, imm } = instruction;
-            const { registerSet } = cpu;
-            const rs1Value = registerSet.getRegister(rs1);
-            const result = rs1Value | imm;
-            registerSet.setRegister(rd, result);
-            cpu.pc += 4;
-        }],
-    [0x7, (instruction, cpu) => {
-            const { rd, rs1, imm } = instruction;
-            const { registerSet } = cpu;
-            const rs1Value = registerSet.getRegister(rs1);
-            const result = rs1Value & imm;
-            registerSet.setRegister(rd, result);
-            cpu.pc += 4;
-        }],
-]);
-const opcode0x23func3Table = new Map([
-    [0x0, (instruction, cpu) => {
-            const { rs1, rs2, imm } = instruction;
-            const { registerSet, ram } = cpu;
-            const rs1Value = registerSet.getRegister(rs1);
-            const rs2Value = registerSet.getRegister(rs2);
-            const byte = (0, binaryFunctions_1.getRange)(rs2Value, 7, 0);
-            ram.setInt8(rs1Value + imm, byte);
-        }],
-    [0x1, (instruction, cpu) => {
-            const { rs1, rs2, imm } = instruction;
-            const { registerSet, ram } = cpu;
-            const rs1Value = registerSet.getRegister(rs1);
-            const rs2Value = registerSet.getRegister(rs2);
-            const half = (0, binaryFunctions_1.getRange)(rs2Value, 15, 0);
-            ram.setInt16(rs1Value + imm, half, true);
-        }],
-    [0x2, (instruction, cpu) => {
-            const { rs1, rs2, imm } = instruction;
-            const { registerSet, ram } = cpu;
-            const rs1Value = registerSet.getRegister(rs1);
-            const rs2Value = registerSet.getRegister(rs2);
-            ram.setInt32(rs1Value + imm, rs2Value, true);
-        }],
-]);
-const opcode0x33func3Table = new Map([
-    [0x0, (instruction, cpu) => {
-            const { rd, rs1, rs2, func7 } = instruction;
-            const { registerSet } = cpu;
-            const rs1Value = registerSet.getRegister(rs1);
-            const rs2Value = registerSet.getRegister(rs2);
-            if (func7 === 0x00) {
-                const sum = rs1Value + rs2Value;
-                registerSet.setRegister(rd, sum);
-            }
-            else if (func7 === 0x20) {
-                const difference = registerSet.getRegister(rs1) - registerSet.getRegister(rs2);
-                registerSet.setRegister(rd, difference);
-            }
-        }],
-    [0x1, (instruction, cpu) => {
-            const { rd, rs1, rs2 } = instruction;
-            const { registerSet } = cpu;
-            const rs1Value = registerSet.getRegister(rs1);
-            const rs2Value = registerSet.getRegisterU(rs2);
-            const result = rs1Value << rs2Value;
-            registerSet.setRegister(rd, result);
-        }],
-    [0x2, (instruction, cpu) => {
-            const { rd, rs1, rs2 } = instruction;
-            const { registerSet } = cpu;
-            const rs1Value = registerSet.getRegister(rs1);
-            const rs2Value = registerSet.getRegister(rs2);
-            const result = rs1Value < rs2Value ? 1 : 0;
-            registerSet.setRegister(rd, result);
-        }],
-    [0x3, (instruction, cpu) => {
-            const { rd, rs1, rs2 } = instruction;
-            const { registerSet } = cpu;
-            const rs1Value = registerSet.getRegisterU(rs1);
-            const rs2Value = registerSet.getRegisterU(rs2);
-            const result = rs1Value < rs2Value ? 1 : 0;
-            registerSet.setRegister(rd, result);
-        }],
-    [0x4, (instruction, cpu) => {
-            const { rd, rs1, rs2 } = instruction;
-            const { registerSet } = cpu;
-            const rs1Value = registerSet.getRegister(rs1);
-            const rs2Value = registerSet.getRegister(rs2);
-            const result = rs1Value ^ rs2Value;
-            registerSet.setRegister(rd, result);
-        }],
-    [0x5, (instruction, cpu) => {
-            const { rd, rs1, rs2, func7 } = instruction;
-            const { registerSet } = cpu;
-            const rs1Value = registerSet.getRegister(rs1);
-            const rs2Value = registerSet.getRegister(rs2);
-            if (func7 === 0x00) {
-                const result = rs1Value >>> rs2Value;
-                registerSet.setRegister(rd, result);
-            }
-            else if (func7 === 0x20) {
-                const result = rs1Value >> rs2Value;
-                registerSet.setRegister(rd, result);
-            }
-        }],
-    [0x6, (instruction, cpu) => {
-            const { rd, rs1, rs2 } = instruction;
-            const { registerSet } = cpu;
-            const rs1Value = registerSet.getRegister(rs1);
-            const rs2Value = registerSet.getRegister(rs2);
-            const result = rs1Value | rs2Value;
-            registerSet.setRegister(rd, result);
-        }],
-    [0x7, (instruction, cpu) => {
-            const { rd, rs1, rs2 } = instruction;
-            const { registerSet } = cpu;
-            const rs1Value = registerSet.getRegister(rs1);
-            const rs2Value = registerSet.getRegister(rs2);
-            const result = rs1Value & rs2Value;
-            registerSet.setRegister(rd, result);
-        }],
-]);
-const opcode0x63func3Table = new Map([
-    [0x0, (instruction, cpu) => {
-            const { rs1, rs2, imm } = instruction;
-            const { registerSet } = cpu;
-            const rs1Value = registerSet.getRegister(rs1);
-            const rs2Value = registerSet.getRegister(rs2);
-            if (rs1Value === rs2Value) {
-                cpu.pc += imm;
-            }
-            else {
-                cpu.pc += 4;
-            }
-        }],
-    [0x1, (instruction, cpu) => {
-            const { rs1, rs2, imm } = instruction;
-            const { registerSet } = cpu;
-            const rs1Value = registerSet.getRegister(rs1);
-            const rs2Value = registerSet.getRegister(rs2);
-            if (rs1Value !== rs2Value) {
-                cpu.pc += imm;
-            }
-            else {
-                cpu.pc += 4;
-            }
-        }],
-    [0x4, (instruction, cpu) => {
-            const { rs1, rs2, imm } = instruction;
-            const { registerSet } = cpu;
-            const rs1Value = registerSet.getRegister(rs1);
-            const rs2Value = registerSet.getRegister(rs2);
-            if (rs1Value < rs2Value) {
-                cpu.pc += imm;
-            }
-            else {
-                cpu.pc += 4;
-            }
-        }],
-    [0x5, (instruction, cpu) => {
-            const { rs1, rs2, imm } = instruction;
-            const { registerSet } = cpu;
-            const rs1Value = registerSet.getRegister(rs1);
-            const rs2Value = registerSet.getRegister(rs2);
-            if (rs1Value >= rs2Value) {
-                cpu.pc += imm;
-            }
-            else {
-                cpu.pc += 4;
-            }
-        }],
-    [0x6, (instruction, cpu) => {
-            const { rs1, rs2, imm } = instruction;
-            const { registerSet } = cpu;
-            const rs1Value = registerSet.getRegisterU(rs1);
-            const rs2Value = registerSet.getRegisterU(rs2);
-            if (rs1Value < rs2Value) {
-                cpu.pc += imm;
-            }
-            else {
-                cpu.pc += 4;
-            }
-        }],
-    [0x7, (instruction, cpu) => {
-            const { rs1, rs2, imm } = instruction;
-            const { registerSet } = cpu;
-            const rs1Value = registerSet.getRegisterU(rs1);
-            const rs2Value = registerSet.getRegisterU(rs2);
-            if (rs1Value >= rs2Value) {
-                cpu.pc += imm;
-            }
-            else {
-                cpu.pc += 4;
-            }
-        }],
-]);
-const opcode0x67func3Table = new Map([
-    [0x0, (instruction, cpu) => {
-            const { rd, rs1, imm } = instruction;
-            const { registerSet } = cpu;
-            const rs1Value = registerSet.getRegister(rs1);
-            registerSet.setRegister(rd, cpu.pc + 4);
-            cpu.pc = rs1Value + imm;
-        }]
-]);
-const opcode0x73func3Table = new Map([
-    [0x0, (instruction, cpu) => {
-            // TODO: Implement ECALL
-        }]
-]);
-const r_TypeOpcodeTable = new Map([
-    [0x33, opcode0x33func3Table]
-]);
-const i_TypeOpcodeTable = new Map([
-    [0x03, opcode0x03func3Table],
-    [0x13, opcode0x13func3Table],
-    [0x67, opcode0x67func3Table],
-    [0x73, opcode0x73func3Table]
-]);
-const s_TypeOpcodeTable = new Map([
-    [0x23, opcode0x23func3Table]
-]);
-const b_TypeOpcodeTable = new Map([
-    [0x63, opcode0x63func3Table]
-]);
-const u_TypeOpcodeTable = new Map([
-    [0x37, (instruction, cpu) => {
-            const { rd, imm } = instruction;
-            const { registerSet } = cpu;
-            registerSet.setRegister(rd, imm);
-        }],
-    [0x17, (instruction, cpu) => {
-            const { rd, imm } = instruction;
-            const { registerSet } = cpu;
-            registerSet.setRegister(rd, imm + cpu.pc);
-        }]
-]);
-const j_TypeOpcodeTable = new Map([
-    [0x6F, (instruction, cpu) => {
-            const { rd, imm } = instruction;
-            const { registerSet } = cpu;
-            registerSet.setRegister(rd, cpu.pc + 4);
-            cpu.pc += imm;
-        }]
-]);
-const opcodeTypeTable = new Map([
-    [0x03, instruction_1.InstructionType.I],
-    [0x13, instruction_1.InstructionType.I],
-    [0x17, instruction_1.InstructionType.U],
-    [0x23, instruction_1.InstructionType.S],
-    [0x33, instruction_1.InstructionType.R],
-    [0x37, instruction_1.InstructionType.U],
-    [0x63, instruction_1.InstructionType.B],
-    [0x67, instruction_1.InstructionType.I],
-    [0x6F, instruction_1.InstructionType.J],
-    [0x73, instruction_1.InstructionType.I],
-]);
