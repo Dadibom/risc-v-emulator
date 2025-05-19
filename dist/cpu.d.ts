@@ -1,8 +1,12 @@
+type ExtensionMap = {
+    M: boolean;
+};
 export declare class CPU {
     pc: number;
     registerSet: RegisterSet;
     ram: DataView;
-    constructor(ram: ArrayBuffer, pc: number);
+    extensions: ExtensionMap;
+    constructor(ram: ArrayBuffer, pc: number, extensions?: ExtensionMap);
     executionStep(): void;
     executeInstruction(instruction: number): void;
     private executeR_Type;
@@ -20,3 +24,4 @@ export declare class RegisterSet {
     setRegister(index: number, value: number): void;
     setRegisterU(index: number, value: number): void;
 }
+export {};

@@ -1,13 +1,30 @@
 import { B_Type, I_Type, J_Type, R_Type, S_Type, U_Type } from "./Assembler/instruction";
 import { getRange } from "./binaryFunctions";
 
+type ExtensionMap = {
+  M: boolean;
+};
+
 export class CPU {
 
   registerSet: RegisterSet = new RegisterSet(32);
   ram: DataView;
 
-  constructor(ram: ArrayBuffer, public pc: number) {
+  extensions: ExtensionMap = {
+    M: false,
+  };
+
+  constructor(ram: ArrayBuffer, public pc: number, extensions?: ExtensionMap) {
     this.ram = new DataView(ram);
+
+    if (extensions) {
+      for (const key in extensions) {
+        if (!(key in this.extensions)) {
+          throw new Error(`Unsupported extension: ${key}`);
+        }
+        this.extensions[key as keyof ExtensionMap] = extensions[key as keyof ExtensionMap];
+      }
+    }
   }
 
   executionStep() {
@@ -54,24 +71,125 @@ export class CPU {
 
   private executeR_Type(opcode: number, instruction: R_Type) {
 
-    const { func3 } = instruction;
+    const { func3, func7 } = instruction;
 
-    if (opcode !== 0x33) {
-      throw new Error('Invalid Instruction');
+    if (func7 == 0x01) {
+      if (!this.extensions.M) {
+        throw new Error('Invalid Instruction (M extension required)');
+      }
+      const { rd, rs1, rs2 } = instruction;
+      const { registerSet } = this;
+
+      switch (func3) {
+        case 0x0: {
+          const rs1Value = registerSet.getRegister(rs1);
+          const rs2Value = registerSet.getRegister(rs2);
+          // MUL - need to keep only lower 32 bits
+          const result = (rs1Value * rs2Value) | 0; // Force 32-bit signed result
+          registerSet.setRegister(rd, result);
+          break;
+        }
+        case 0x1: {
+          const rs1Value = registerSet.getRegister(rs1);
+          const rs2Value = registerSet.getRegister(rs2);
+          // MULH - signed × signed
+          // JavaScript can't directly access high 32 bits of 64-bit product
+          // Need BigInt for proper 64-bit arithmetic
+          const result = Number(BigInt(rs1Value) * BigInt(rs2Value) >> 32n);
+          registerSet.setRegister(rd, result);
+          break;
+        }
+        case 0x2: {
+          const rs1Value = registerSet.getRegister(rs1);
+          const rs2Value = registerSet.getRegisterU(rs2);
+          // MULHSU - signed × unsigned
+          // rs1 is signed, rs2 is unsigned
+          const result = Number(BigInt(rs1Value) * BigInt(rs2Value) >> 32n);
+          registerSet.setRegister(rd, result);
+          break;
+        }
+        case 0x3: {
+          const rs1Value = registerSet.getRegisterU(rs1);
+          const rs2Value = registerSet.getRegisterU(rs2);
+          // MULHU - unsigned × unsigned
+          const result = Number(BigInt(rs1Value) * BigInt(rs2Value) >> 32n);
+          registerSet.setRegister(rd, result);
+          break;
+        }
+        case 0x4: {
+          const rs1Value = registerSet.getRegister(rs1);
+          const rs2Value = registerSet.getRegister(rs2);
+          // DIV - signed division
+          // Handle division by zero and overflow special cases
+          if (rs2Value === 0) {
+            registerSet.setRegister(rd, -1); // Division by zero returns -1
+          } else if (rs1Value === -2147483648 && rs2Value === -1) {
+            registerSet.setRegister(rd, -2147483648); // Overflow case
+          } else {
+            const result = Math.trunc(rs1Value / rs2Value); // Truncate toward zero
+            registerSet.setRegister(rd, result);
+          }
+          break;
+        }
+        case 0x5: {
+          const rs1Value = registerSet.getRegisterU(rs1);
+          const rs2Value = registerSet.getRegisterU(rs2);
+          // DIVU - unsigned division
+          if (rs2Value === 0) {
+            registerSet.setRegister(rd, -1); // Division by zero returns 2^32-1
+          } else {
+            const result = Math.trunc(rs1Value / rs2Value);
+            registerSet.setRegister(rd, result);
+          }
+          break;
+        }
+        case 0x6: {
+          const rs1Value = registerSet.getRegister(rs1);
+          const rs2Value = registerSet.getRegister(rs2);
+          // REM - signed remainder
+          if (rs2Value === 0) {
+            registerSet.setRegister(rd, rs1Value); // Remainder of division by zero is the dividend
+          } else if (rs1Value === -2147483648 && rs2Value === -1) {
+            registerSet.setRegister(rd, 0); // Special overflow case
+          } else {
+            const result = rs1Value % rs2Value;
+            registerSet.setRegister(rd, result);
+          }
+          break;
+        }
+        case 0x7: {
+          const rs1Value = registerSet.getRegisterU(rs1);
+          const rs2Value = registerSet.getRegisterU(rs2);
+          // REMU - unsigned remainder
+          if (rs2Value === 0) {
+            registerSet.setRegister(rd, rs1Value); // Remainder of division by zero is the dividend
+          } else {
+            const result = rs1Value % rs2Value;
+            registerSet.setRegister(rd, result);
+          }
+          break;
+        }
+
+        default:
+          throw new Error('Invalid Instruction');
+      }
+
+      this.pc += 4;
+      return;
     }
 
     switch (func3) {
       case 0x0: {
-        const { rd, rs1, rs2, func7 } = instruction;
+        const { rd, rs1, rs2 } = instruction;
         const { registerSet } = this;
-    
+
         const rs1Value = registerSet.getRegister(rs1);
         const rs2Value = registerSet.getRegister(rs2);
-    
+
         if (func7 === 0x00) {
           const sum = rs1Value + rs2Value;
           registerSet.setRegister(rd, sum);
-    
+
         } else if (func7 === 0x20) {
           const difference = registerSet.getRegister(rs1) - registerSet.getRegister(rs2);
           registerSet.setRegister(rd, difference);
@@ -81,10 +199,10 @@ export class CPU {
       case 0x1: {
         const { rd, rs1, rs2 } = instruction;
         const { registerSet } = this;
-    
+
         const rs1Value = registerSet.getRegister(rs1);
         const rs2Value = registerSet.getRegisterU(rs2);
-    
+
         const result = rs1Value << rs2Value;
         registerSet.setRegister(rd, result);
         break;
@@ -92,10 +210,10 @@ export class CPU {
       case 0x2: {
         const { rd, rs1, rs2 } = instruction;
         const { registerSet } = this;
-    
+
         const rs1Value = registerSet.getRegister(rs1);
         const rs2Value = registerSet.getRegister(rs2);
-    
+
         const result = rs1Value < rs2Value ? 1 : 0;
         registerSet.setRegister(rd, result);
         break;
@@ -103,36 +221,36 @@ export class CPU {
       case 0x3: {
         const { rd, rs1, rs2 } = instruction;
         const { registerSet } = this;
-    
+
         const rs1Value = registerSet.getRegisterU(rs1);
         const rs2Value = registerSet.getRegisterU(rs2);
-    
+
         const result = rs1Value < rs2Value ? 1 : 0;
         registerSet.setRegister(rd, result);
         break;
       }
       case 0x4: {
-       const { rd, rs1, rs2 } = instruction;
+        const { rd, rs1, rs2 } = instruction;
         const { registerSet } = this;
-    
+
         const rs1Value = registerSet.getRegister(rs1);
         const rs2Value = registerSet.getRegister(rs2);
-    
+
         const result = rs1Value ^ rs2Value;
         registerSet.setRegister(rd, result);
         break;
       }
       case 0x5: {
-        const { rd, rs1, rs2, func7 } = instruction;
+        const { rd, rs1, rs2 } = instruction;
         const { registerSet } = this;
-    
+
         const rs1Value = registerSet.getRegister(rs1);
         const rs2Value = registerSet.getRegister(rs2);
-    
+
         if (func7 === 0x00) {
           const result = rs1Value >>> rs2Value;
           registerSet.setRegister(rd, result);
-    
+
         } else if (func7 === 0x20) {
           const result = rs1Value >> rs2Value;
           registerSet.setRegister(rd, result);
@@ -142,10 +260,10 @@ export class CPU {
       case 0x6: {
         const { rd, rs1, rs2 } = instruction;
         const { registerSet } = this;
-    
+
         const rs1Value = registerSet.getRegister(rs1);
         const rs2Value = registerSet.getRegister(rs2);
-    
+
         const result = rs1Value | rs2Value;
         registerSet.setRegister(rd, result);
         break;
@@ -153,10 +271,10 @@ export class CPU {
       case 0x7: {
         const { rd, rs1, rs2 } = instruction;
         const { registerSet } = this;
-    
-        const rs1Value = registerSet.getRegister(rs1);
-        const rs2Value = registerSet.getRegister(rs2);
-    
+
+        const rs1Value = registerSet.getRegisterU(rs1);
+        const rs2Value = registerSet.getRegisterU(rs2);
+
         const result = rs1Value & rs2Value;
         registerSet.setRegister(rd, result);
         break;
@@ -354,7 +472,7 @@ export class CPU {
           const { rd, rs1, imm } = instruction;
           const { registerSet } = this;
 
-            const rs1Value = registerSet.getRegister(rs1);
+          const rs1Value = registerSet.getRegister(rs1);
 
           registerSet.setRegister(rd, this.pc + 4);
           this.pc = rs1Value + imm;
@@ -389,34 +507,34 @@ export class CPU {
       case 0x0: {
         const { rs1, rs2, imm } = instruction;
         const { registerSet, ram } = this;
-    
+
         const rs1Value = registerSet.getRegister(rs1);
         const rs2Value = registerSet.getRegister(rs2);
-    
+
         const byte = getRange(rs2Value, 7, 0);
-    
+
         ram.setInt8(rs1Value + imm, byte);
         break;
       }
       case 0x1: {
         const { rs1, rs2, imm } = instruction;
         const { registerSet, ram } = this;
-    
+
         const rs1Value = registerSet.getRegister(rs1);
         const rs2Value = registerSet.getRegister(rs2);
-    
+
         const half = getRange(rs2Value, 15, 0);
-    
+
         ram.setInt16(rs1Value + imm, half, true);
         break;
       }
       case 0x2: {
         const { rs1, rs2, imm } = instruction;
         const { registerSet, ram } = this;
-    
+
         const rs1Value = registerSet.getRegister(rs1);
         const rs2Value = registerSet.getRegister(rs2);
-    
+
         ram.setInt32(rs1Value + imm, rs2Value, true);
         break;
       }
@@ -440,10 +558,10 @@ export class CPU {
       case 0x0: {
         const { rs1, rs2, imm } = instruction;
         const { registerSet } = this;
-    
+
         const rs1Value = registerSet.getRegister(rs1);
         const rs2Value = registerSet.getRegister(rs2);
-    
+
         if (rs1Value === rs2Value) {
           this.pc += imm;
         } else {
@@ -454,10 +572,10 @@ export class CPU {
       case 0x1: {
         const { rs1, rs2, imm } = instruction;
         const { registerSet } = this;
-    
+
         const rs1Value = registerSet.getRegister(rs1);
         const rs2Value = registerSet.getRegister(rs2);
-    
+
         if (rs1Value !== rs2Value) {
           this.pc += imm;
         } else {
@@ -468,10 +586,10 @@ export class CPU {
       case 0x4: {
         const { rs1, rs2, imm } = instruction;
         const { registerSet } = this;
-    
+
         const rs1Value = registerSet.getRegister(rs1);
         const rs2Value = registerSet.getRegister(rs2);
-    
+
         if (rs1Value < rs2Value) {
           this.pc += imm;
         } else {
@@ -482,10 +600,10 @@ export class CPU {
       case 0x5: {
         const { rs1, rs2, imm } = instruction;
         const { registerSet } = this;
-    
+
         const rs1Value = registerSet.getRegister(rs1);
         const rs2Value = registerSet.getRegister(rs2);
-    
+
         if (rs1Value >= rs2Value) {
           this.pc += imm;
         } else {
@@ -496,10 +614,10 @@ export class CPU {
       case 0x6: {
         const { rs1, rs2, imm } = instruction;
         const { registerSet } = this;
-    
+
         const rs1Value = registerSet.getRegisterU(rs1);
         const rs2Value = registerSet.getRegisterU(rs2);
-    
+
         if (rs1Value < rs2Value) {
           this.pc += imm;
         } else {
@@ -510,10 +628,10 @@ export class CPU {
       case 0x7: {
         const { rs1, rs2, imm } = instruction;
         const { registerSet } = this;
-    
+
         const rs1Value = registerSet.getRegisterU(rs1);
         const rs2Value = registerSet.getRegisterU(rs2);
-    
+
         if (rs1Value >= rs2Value) {
           this.pc += imm;
         } else {
@@ -531,14 +649,14 @@ export class CPU {
       case 0x37: {
         const { rd, imm } = instruction;
         const { registerSet } = this;
-    
+
         registerSet.setRegister(rd, imm);
         break;
       }
       case 0x17: {
         const { rd, imm } = instruction;
         const { registerSet } = this;
-    
+
         registerSet.setRegister(rd, imm + this.pc);
         break;
       }
@@ -556,7 +674,7 @@ export class CPU {
 
     const { rd, imm } = instruction;
     const { registerSet } = this;
-    
+
     registerSet.setRegister(rd, this.pc + 4);
     this.pc += imm;
   }

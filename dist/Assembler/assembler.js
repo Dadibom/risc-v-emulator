@@ -29,35 +29,75 @@ class Assembler {
         let instruction;
         switch (baseValues.type) {
             case instruction_1.InstructionType.R:
-                instruction = new instruction_1.R_Type(Object.assign(Object.assign({}, baseValues), { rd: parseRegister(tokens[1]), rs1: parseRegister(tokens[2]), rs2: parseRegister(tokens[3]) }));
+                instruction = new instruction_1.R_Type({
+                    ...baseValues,
+                    rd: parseRegister(tokens[1]),
+                    rs1: parseRegister(tokens[2]),
+                    rs2: parseRegister(tokens[3])
+                });
                 break;
             case instruction_1.InstructionType.I:
                 switch (i_Subtypes.get(tokens[0])) {
                     case ImmediateSubtypes.Normal:
-                        instruction = new instruction_1.I_Type(Object.assign(Object.assign({}, baseValues), { rd: parseRegister(tokens[1]), rs1: parseRegister(tokens[2]), imm: parseInt(tokens[3]) }));
+                        instruction = new instruction_1.I_Type({
+                            ...baseValues,
+                            rd: parseRegister(tokens[1]),
+                            rs1: parseRegister(tokens[2]),
+                            imm: parseInt(tokens[3])
+                        });
                         break;
                     case ImmediateSubtypes.Indexed:
-                        instruction = new instruction_1.I_Type(Object.assign(Object.assign({}, baseValues), { rd: parseRegister(tokens[1]), imm: parseInt(tokens[2]), rs1: parseRegister(tokens[3]) }));
+                        instruction = new instruction_1.I_Type({
+                            ...baseValues,
+                            rd: parseRegister(tokens[1]),
+                            imm: parseInt(tokens[2]),
+                            rs1: parseRegister(tokens[3])
+                        });
                         break;
                     case ImmediateSubtypes.Shamt:
-                        instruction = new instruction_1.I_Type(Object.assign(Object.assign({}, baseValues), { rd: parseRegister(tokens[1]), rs1: parseRegister(tokens[2]), shamt: parseInt(tokens[3]) }));
+                        instruction = new instruction_1.I_Type({
+                            ...baseValues,
+                            rd: parseRegister(tokens[1]),
+                            rs1: parseRegister(tokens[2]),
+                            shamt: parseInt(tokens[3])
+                        });
                         break;
                     case ImmediateSubtypes.Ecall:
-                        instruction = new instruction_1.I_Type(Object.assign({}, baseValues));
+                        instruction = new instruction_1.I_Type({
+                            ...baseValues
+                        });
                         break;
                 }
                 break;
             case instruction_1.InstructionType.S:
-                instruction = new instruction_1.S_Type(Object.assign(Object.assign({}, baseValues), { rs2: parseRegister(tokens[1]), imm: parseInt(tokens[2]), rs1: parseRegister(tokens[3]) }));
+                instruction = new instruction_1.S_Type({
+                    ...baseValues,
+                    rs2: parseRegister(tokens[1]),
+                    imm: parseInt(tokens[2]),
+                    rs1: parseRegister(tokens[3])
+                });
                 break;
             case instruction_1.InstructionType.B:
-                instruction = new instruction_1.B_Type(Object.assign(Object.assign({}, baseValues), { rs1: parseRegister(tokens[1]), rs2: parseRegister(tokens[2]), imm: parseInt(tokens[3]) }));
+                instruction = new instruction_1.B_Type({
+                    ...baseValues,
+                    rs1: parseRegister(tokens[1]),
+                    rs2: parseRegister(tokens[2]),
+                    imm: parseInt(tokens[3]),
+                });
                 break;
             case instruction_1.InstructionType.U:
-                instruction = new instruction_1.U_Type(Object.assign(Object.assign({}, baseValues), { rd: parseRegister(tokens[1]), imm: parseInt(tokens[2]) }));
+                instruction = new instruction_1.U_Type({
+                    ...baseValues,
+                    rd: parseRegister(tokens[1]),
+                    imm: parseInt(tokens[2]),
+                });
                 break;
             case instruction_1.InstructionType.J:
-                instruction = new instruction_1.J_Type(Object.assign(Object.assign({}, baseValues), { rd: parseRegister(tokens[1]), imm: parseInt(tokens[2]) }));
+                instruction = new instruction_1.J_Type({
+                    ...baseValues,
+                    rd: parseRegister(tokens[1]),
+                    imm: parseInt(tokens[2]),
+                });
                 break;
         }
         return instruction;
