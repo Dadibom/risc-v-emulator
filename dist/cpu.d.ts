@@ -9,12 +9,16 @@ export declare class CPU {
     constructor(ram: ArrayBuffer, pc: number, extensions?: ExtensionMap);
     executionStep(): void;
     executeInstruction(instruction: number): void;
-    private executeR_Type;
-    private executeI_Type;
+    private executeR_Type33;
+    private executeI_Type03;
+    private executeI_Type13;
+    private executeI_Type67;
+    private executeI_Type73;
     private executeS_Type;
-    private executeB_Type;
-    private executeU_Type;
-    private executeJ_Type;
+    private executeB_Type63;
+    private executeU_Type37;
+    private executeU_Type17;
+    private executeJ_Type6F;
 }
 export declare class RegisterSet {
     private registers;
