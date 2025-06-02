@@ -613,17 +613,17 @@ export class CPU {
   }
 
   private executeU_Type37(instruction: U_Type) {
-    const { rd, imm } = instruction;
+    const { rd, immU } = instruction;
 
-    this.registerSet.setRegister(rd, imm);
-
+    this.registerSet.setRegister(rd, immU);
+    
     this.pc += 4;
   }
 
   private executeU_Type17(instruction: U_Type) {
-    const { rd, imm } = instruction;
+    const { rd, immU } = instruction;
 
-    this.registerSet.setRegister(rd, imm + this.pc);
+    this.registerSet.setRegister(rd, immU + this.pc);
 
     this.pc += 4;
   }

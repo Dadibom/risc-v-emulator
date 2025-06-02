@@ -515,13 +515,13 @@ class CPU {
         }
     }
     executeU_Type37(instruction) {
-        const { rd, imm } = instruction;
-        this.registerSet.setRegister(rd, imm);
+        const { rd, immU } = instruction;
+        this.registerSet.setRegister(rd, immU);
         this.pc += 4;
     }
     executeU_Type17(instruction) {
-        const { rd, imm } = instruction;
-        this.registerSet.setRegister(rd, imm + this.pc);
+        const { rd, immU } = instruction;
+        this.registerSet.setRegister(rd, immU + this.pc);
         this.pc += 4;
     }
     executeJ_Type6F(instruction) {
