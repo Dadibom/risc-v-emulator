@@ -1,4 +1,4 @@
-import { B_Type, I_Type, J_Type, R_Type, S_Type, U_Type } from "./Assembler/instruction";
+import { B_Type, I_Type, J_Type, R_Type, S_Type, U_Type, Instruction } from "./Assembler/instruction";
 import { getRange } from "./binaryFunctions";
 
 type ExtensionMap = {
@@ -13,10 +13,32 @@ const inst_s = new S_Type({ binary: 1 });
 const inst_u = new U_Type({ binary: 1 });
 const inst_r = new R_Type({ binary: 1 });
 
+const CSR_MSTATUS = 0x300;
+const CSR_MISA = 0x301;
+const CSR_MIE = 0x304;
+const CSR_MTVEC = 0x305;
+const CSR_MSCRATCH = 0x340;
+const CSR_MEPC = 0x341;
+const CSR_MCAUSE = 0x342;
+const CSR_MTVAL = 0x343;
+const CSR_MIP = 0x344;
+
+const CSR_MSTATUS_MPIE = 7;
+const CSR_MSTATUS_MIE = 3;
+
+enum Privilege {
+  User = 0b00,  // 0
+  Supervisor = 0b01,  // 1
+  // 0b10 is reserved
+  Machine = 0b11,  // 3
+}
+
 export class CPU {
 
   registerSet: RegisterSet = new RegisterSet(32);
   ram: DataView;
+  csr: Uint32Array = new Uint32Array(4096);
+  currentPrivilege: Privilege = Privilege.Machine;
 
   extensions: ExtensionMap = {
     M: false,
@@ -95,7 +117,8 @@ export class CPU {
         break;
 
       default:
-        throw new Error('Invalid Instruction');
+        this.illegal_instruction(instruction);
+        return;
     }
   }
 
@@ -105,7 +128,8 @@ export class CPU {
 
     if (func7 == 0x01) {
       if (!this.extensions.M) {
-        throw new Error('Invalid Instruction (M extension required)');
+        this.illegal_instruction(instruction.binary);
+        return;
       }
 
       switch (func3) {
@@ -457,19 +481,206 @@ export class CPU {
     } else {
       throw new Error('Invalid Instruction');
     }
+  }
 
+  set_csr(csr: number, value: number) {
+    this.csr[csr] = value;
+  }
+
+  get_csr(csr: number): number {
+    return this.csr[csr];
+  }
+
+  set_csr_mstatus_bit(bit: number, value: number) {
+    if (value) {
+      this.set_csr(CSR_MSTATUS, this.get_csr(CSR_MSTATUS) | (1 << bit));
+    } else {
+      this.set_csr(CSR_MSTATUS, this.get_csr(CSR_MSTATUS) & ~(1 << bit));
+    }
+  }
+
+  get_csr_mstatus_bit(bit: number): number {
+    return (this.get_csr(CSR_MSTATUS) >> bit) & 1;
+  }
+
+  set_csr_mstatus_privilege(privilege: Privilege) { // MPP
+    // Set bits 12:11
+    this.set_csr(CSR_MSTATUS, (this.get_csr(CSR_MSTATUS) & ~0b110000000000) | (privilege << 11));
+  }
+
+  get_csr_mstatus_privilege(): Privilege { // MPP
+    return (this.csr[CSR_MSTATUS] & 0b110000000000) >> 11 as Privilege;
+  }
+
+  trap(cause: number, mtval: number = 0) {
+    this.set_csr(CSR_MEPC, this.pc);
+    this.set_csr(CSR_MCAUSE, cause);
+    this.set_csr(CSR_MTVAL, mtval);
+    this.set_csr_mstatus_bit(CSR_MSTATUS_MPIE, this.get_csr_mstatus_bit(CSR_MSTATUS_MIE));
+    this.set_csr_mstatus_bit(CSR_MSTATUS_MIE, 0);
+    this.set_csr_mstatus_privilege(this.currentPrivilege);
+    this.pc = this.get_csr(CSR_MTVEC) & ~3; // Align to 4-byte boundary
+    this.currentPrivilege = Privilege.Machine;
+  }
+
+  illegal_instruction(instruction: number) {
+    console.error('Encountered illegal instruction:', instruction);
+    this.trap(2, instruction);
+  }
+
+  is_csr_addr_readonly(csr: number): boolean {
+    return ((csr >> 10) & 0x3) === 0x3;  // bits [11:10] === 11
+  }
+
+  get_csr_addr_privilege(csr: number): Privilege {
+    return ((csr >> 8) & 0x3) as Privilege;  // bits [9:8]
   }
 
   private executeI_Type73(instruction: I_Type) {
-    const { func3 } = instruction;
+    const { func3, rs1, rd, csr } = instruction;
+
+    // Zicsr instructions
 
     switch (func3) {
-      case 0x0: {
-        // TODO: Implement ECALL
-        throw new Error('ECALL not implemented');
+      case 0b000: {
+        if (instruction.binary === 0b00000000000000000000000001110011) {
+          // ECALL
+          const cause = this.currentPrivilege === Privilege.Machine ? 11
+            : this.currentPrivilege === Privilege.Supervisor ? 9
+              : 8; // User
+          this.trap(cause);
+          break;
+        } else if (instruction.binary === 0b00000000000100000000000001110011) {
+          // EBREAK
+          this.trap(3);
+          break;
+        } else if (instruction.binary === 0b00110000001000000000000001110011) {
+          // MRET
+          if (this.currentPrivilege !== Privilege.Machine) {
+            this.illegal_instruction(instruction.binary);
+            return;
+          }
+          this.pc = this.csr[CSR_MEPC] + 4;
+          this.currentPrivilege = this.get_csr_mstatus_privilege(); // restore privilege from MPP
+          this.set_csr_mstatus_bit(CSR_MSTATUS_MIE, this.get_csr_mstatus_bit(CSR_MSTATUS_MPIE));
+          this.set_csr_mstatus_bit(CSR_MSTATUS_MPIE, 1);
+          this.set_csr_mstatus_privilege(Privilege.User); // clear MPP
+          break;
+        } else {
+          this.illegal_instruction(instruction.binary);
+          return;
+        }
       }
+      case 0b001:
+        // CSRRW - CSR read and write
+        if (this.is_csr_addr_readonly(csr)) {
+          // Attempted write to a readonly CSR
+          this.illegal_instruction(instruction.binary);
+          return;
+        }
+        if (this.get_csr_addr_privilege(csr) > this.currentPrivilege) {
+          // Not enough privilege to access the CSR
+          this.illegal_instruction(instruction.binary);
+          return;
+        }
+        if (rd !== 0) {
+          this.registerSet.setRegister(rd, this.get_csr(csr));
+        }
+        this.set_csr(csr, this.registerSet.getRegister(rs1));
+        this.pc += 4;
+        break;
+      case 0b010:
+        // CSRRS - CSR read and set
+        if (this.is_csr_addr_readonly(csr) && rs1 !== 0) {
+          // Attempted write to a readonly CSR
+          this.illegal_instruction(instruction.binary);
+          return;
+        }
+        if (this.get_csr_addr_privilege(csr) > this.currentPrivilege) {
+          // Not enough privilege to access the CSR
+          this.illegal_instruction(instruction.binary);
+          return;
+        }
+        this.registerSet.setRegister(rd, this.get_csr(csr));
+        if (rs1 !== 0) {
+          this.set_csr(csr, this.get_csr(csr) | this.registerSet.getRegister(rs1));
+        }
+        this.pc += 4;
+        break;
+      case 0b011:
+        // CSRRC - CSR read and clear
+        if (this.is_csr_addr_readonly(csr) && rs1 !== 0) {
+          // Attempted write to a readonly CSR
+          this.illegal_instruction(instruction.binary);
+          return;
+        }
+        if (this.get_csr_addr_privilege(csr) > this.currentPrivilege) {
+          // Not enough privilege to access the CSR
+          this.illegal_instruction(instruction.binary);
+          return;
+        }
+        this.registerSet.setRegister(rd, this.get_csr(csr));
+        if (rs1 !== 0) {
+          this.set_csr(csr, this.get_csr(csr) & ~this.registerSet.getRegister(rs1));
+        }
+        this.pc += 4;
+        break;
+      case 0b101:
+        // CSRRWI - CSR read and write immediate (uimm from rs1 field, zero-extended)
+        if (this.is_csr_addr_readonly(csr) && rs1 !== 0) {
+          // Attempted write to a readonly CSR
+          this.illegal_instruction(instruction.binary);
+          return;
+        }
+        if (this.get_csr_addr_privilege(csr) > this.currentPrivilege) {
+          // Not enough privilege to access the CSR
+          this.illegal_instruction(instruction.binary);
+          return;
+        }
+        this.registerSet.setRegister(rd, this.get_csr(csr));
+        this.set_csr(csr, rs1);
+        this.pc += 4;
+        break;
+      case 0b110:
+        // CSRRSI - CSR read and set immediate (uimm from rs1 field)
+        if (this.is_csr_addr_readonly(csr) && rs1 !== 0) {
+          // Attempted write to a readonly CSR
+          this.illegal_instruction(instruction.binary);
+          return;
+        }
+        if (this.get_csr_addr_privilege(csr) > this.currentPrivilege) {
+          // Not enough privilege to access the CSR
+          this.illegal_instruction(instruction.binary);
+          return;
+        }
+        this.registerSet.setRegister(rd, this.get_csr(csr));
+        if (rs1 !== 0) {
+          this.set_csr(csr, this.get_csr(csr) | rs1);
+        }
+        this.pc += 4;
+        break;
+      case 0b111:
+        // CSRRCI - CSR read and clear immediate (uimm from rs1 field)
+        if (this.is_csr_addr_readonly(csr) && rs1 !== 0) {
+          // Attempted write to a readonly CSR
+          this.illegal_instruction(instruction.binary);
+          return;
+        }
+        if (this.get_csr_addr_privilege(csr) > this.currentPrivilege) {
+          // Not enough privilege to access the CSR
+          this.illegal_instruction(instruction.binary);
+          return;
+        }
+        this.registerSet.setRegister(rd, this.get_csr(csr));
+        if (rs1 !== 0) {
+          this.set_csr(csr, this.get_csr(csr) & ~rs1);
+        }
+        this.pc += 4;
+        break;
+
       default:
-        throw new Error('Invalid Instruction');
+        this.illegal_instruction(instruction.binary);
+        return;
     }
   }
 
@@ -478,7 +689,8 @@ export class CPU {
     const { func3 } = instruction;
 
     if (opcode !== 0x23) {
-      throw new Error('Invalid Instruction');
+      this.illegal_instruction(instruction.binary);
+      return;
     }
 
     switch (func3) {
@@ -517,7 +729,8 @@ export class CPU {
         break;
       }
       default:
-        throw new Error('Invalid Instruction');
+        this.illegal_instruction(instruction.binary);
+        return;
     }
 
     this.pc += 4;
@@ -608,7 +821,8 @@ export class CPU {
         break;
       }
       default:
-        throw new Error('Invalid Instruction');
+        this.illegal_instruction(instruction.binary);
+        return;
     }
   }
 
@@ -616,7 +830,7 @@ export class CPU {
     const { rd, immU } = instruction;
 
     this.registerSet.setRegister(rd, immU);
-    
+
     this.pc += 4;
   }
 

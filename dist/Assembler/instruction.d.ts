@@ -35,6 +35,8 @@ export declare class I_Type extends Instruction implements HasImmediate {
     get imm(): number;
     get immU(): number;
     set imm(value: number);
+    get csr(): number;
+    set csr(value: number);
 }
 export declare class S_Type extends Instruction implements HasImmediate {
     type: InstructionType;

@@ -175,6 +175,14 @@ export class I_Type extends Instruction implements HasImmediate {
     this.binary = setRange(this.binary, value, 31, 20);
   }
 
+  get csr() {
+    return getRange(this.binary, 31, 20);
+  }
+
+  set csr(value: number) {
+    this.binary = setRange(this.binary, value, 31, 20);
+  }
+
 }
 
 export class S_Type extends Instruction implements HasImmediate {
@@ -363,7 +371,6 @@ export class J_Type extends Instruction implements HasImmediate {
   }
 
   get immU() {
-
     const imm = getRange(this.binary, 31, 12);
 
     return (

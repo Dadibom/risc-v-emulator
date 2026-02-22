@@ -127,6 +127,12 @@ class I_Type extends Instruction {
     set imm(value) {
         this.binary = (0, binaryFunctions_1.setRange)(this.binary, value, 31, 20);
     }
+    get csr() {
+        return (0, binaryFunctions_1.getRange)(this.binary, 31, 20);
+    }
+    set csr(value) {
+        this.binary = (0, binaryFunctions_1.setRange)(this.binary, value, 31, 20);
+    }
 }
 exports.I_Type = I_Type;
 class S_Type extends Instruction {
