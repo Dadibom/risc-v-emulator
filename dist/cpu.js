@@ -55,7 +55,7 @@ class CPU {
         this.executeInstruction(instruction);
     }
     executeInstruction(instruction) {
-        const opcode = (0, binaryFunctions_1.getRange)(instruction, 6, 0);
+        const opcode = instruction & 0x7F;
         switch (opcode) {
             case 0x03:
                 inst_i.binary = instruction;
@@ -419,12 +419,10 @@ class CPU {
         }
     }
     mmu_translate(address, accessType) {
-        const satp = this.get_csr(CSR_SATP);
-        const pagingEnabled = (satp >>> 31) === 1;
         // 1. Determine Effective Privilege Mode
         let effectivePrivilege = this.currentPrivilege;
-        const mstatus = this.get_csr(CSR_MSTATUS);
         if (this.currentPrivilege === Privilege.Machine) {
+            const mstatus = this.get_csr(CSR_MSTATUS);
             const mprv = (mstatus >> 17) & 1;
             if (mprv === 1 && accessType !== 'X') {
                 effectivePrivilege = (mstatus >> 11) & 0b11; // MPP
@@ -434,12 +432,14 @@ class CPU {
                 return address >>> 0;
             }
         }
+        const satp = this.get_csr(CSR_SATP);
+        const pagingEnabled = (satp >>> 31) === 1;
         if (!pagingEnabled)
             return address >>> 0;
-        const vpn = (address >>> 12) & 0xFFFFF;
+        const vpn = address & 0xFFFFF000;
         const cached = this.mmu_cache.get(vpn);
         if (cached !== undefined) {
-            return (((cached & ~0xFFF) | (address & 0xFFF)) >>> 0);
+            return cached | (address & 0xFFF);
         }
         // 2. Parse Virtual Address
         const vpn1 = (address >>> 22) & 0x3FF;
@@ -506,7 +506,7 @@ class CPU {
         else {
             addr = ((ppn << 12) | (vAddr & 0xFFF)) >>> 0;
         }
-        this.mmu_cache.set(vpn, (addr & ~0xFFF) >>> 0);
+        this.mmu_cache.set(vpn, addr & ~0xFFF >>> 0);
         return addr;
     }
     set_csr(csr, value) {
@@ -754,9 +754,8 @@ class CPU {
         const { func3, rs1, rs2, imm } = instruction;
         switch (func3) {
             case 0x0: {
-                const { registerSet } = this;
-                const rs1Value = registerSet.getRegister(rs1);
-                const rs2Value = registerSet.getRegister(rs2);
+                const rs1Value = this.registerSet.getRegister(rs1);
+                const rs2Value = this.registerSet.getRegister(rs2);
                 if (rs1Value === rs2Value) {
                     this.pc += imm;
                 }
@@ -766,9 +765,8 @@ class CPU {
                 break;
             }
             case 0x1: {
-                const { registerSet } = this;
-                const rs1Value = registerSet.getRegister(rs1);
-                const rs2Value = registerSet.getRegister(rs2);
+                const rs1Value = this.registerSet.getRegister(rs1);
+                const rs2Value = this.registerSet.getRegister(rs2);
                 if (rs1Value !== rs2Value) {
                     this.pc += imm;
                 }
@@ -778,9 +776,8 @@ class CPU {
                 break;
             }
             case 0x4: {
-                const { registerSet } = this;
-                const rs1Value = registerSet.getRegister(rs1);
-                const rs2Value = registerSet.getRegister(rs2);
+                const rs1Value = this.registerSet.getRegister(rs1);
+                const rs2Value = this.registerSet.getRegister(rs2);
                 if (rs1Value < rs2Value) {
                     this.pc += imm;
                 }
@@ -790,9 +787,8 @@ class CPU {
                 break;
             }
             case 0x5: {
-                const { registerSet } = this;
-                const rs1Value = registerSet.getRegister(rs1);
-                const rs2Value = registerSet.getRegister(rs2);
+                const rs1Value = this.registerSet.getRegister(rs1);
+                const rs2Value = this.registerSet.getRegister(rs2);
                 if (rs1Value >= rs2Value) {
                     this.pc += imm;
                 }
@@ -802,9 +798,8 @@ class CPU {
                 break;
             }
             case 0x6: {
-                const { registerSet } = this;
-                const rs1Value = registerSet.getRegisterU(rs1);
-                const rs2Value = registerSet.getRegisterU(rs2);
+                const rs1Value = this.registerSet.getRegisterU(rs1);
+                const rs2Value = this.registerSet.getRegisterU(rs2);
                 if (rs1Value < rs2Value) {
                     this.pc += imm;
                 }
@@ -814,9 +809,8 @@ class CPU {
                 break;
             }
             case 0x7: {
-                const { registerSet } = this;
-                const rs1Value = registerSet.getRegisterU(rs1);
-                const rs2Value = registerSet.getRegisterU(rs2);
+                const rs1Value = this.registerSet.getRegisterU(rs1);
+                const rs2Value = this.registerSet.getRegisterU(rs2);
                 if (rs1Value >= rs2Value) {
                     this.pc += imm;
                 }
