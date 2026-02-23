@@ -35,6 +35,7 @@ class CPU {
         this.registerSet = new RegisterSet(32);
         this.csr = new Uint32Array(4096);
         this.currentPrivilege = Privilege.Machine;
+        this.mmu_cache = new Map();
         this.extensions = {
             M: false,
         };
@@ -435,6 +436,11 @@ class CPU {
         }
         if (!pagingEnabled)
             return address >>> 0;
+        const vpn = (address >>> 12) & 0xFFFFF;
+        const cached = this.mmu_cache.get(vpn);
+        if (cached !== undefined) {
+            return (((cached & ~0xFFF) | (address & 0xFFF)) >>> 0);
+        }
         // 2. Parse Virtual Address
         const vpn1 = (address >>> 22) & 0x3FF;
         const vpn0 = (address >>> 12) & 0x3FF;
@@ -449,7 +455,7 @@ class CPU {
             const pte1ppn0 = (pte1 >>> 10) & 0x3FF;
             if (pte1ppn0 !== 0)
                 throw new Error('Page Fault: Misaligned superpage');
-            return this.check_permissions(pte1, address, effectivePrivilege, accessType, true);
+            return this.check_permissions(vpn, pte1, address, effectivePrivilege, accessType, true);
         }
         // 4. Level 0 Walk (Leaf)
         const pte1ppn = (pte1 >>> 10) & 0x3FFFFF;
@@ -460,10 +466,10 @@ class CPU {
         // Level 0 must have at least one R,W,X bit set
         if ((pte0 & 0xE) === 0)
             throw new Error('Page Fault: Level 0 is not a leaf');
-        return this.check_permissions(pte0, address, effectivePrivilege, accessType, false);
+        return this.check_permissions(vpn, pte0, address, effectivePrivilege, accessType, false);
     }
     // Check permissions for PTE
-    check_permissions(pte, vAddr, priv, type, isMega) {
+    check_permissions(vpn, pte, vAddr, priv, type, isMega) {
         const r = (pte >> 1) & 1;
         const w = (pte >> 2) & 1;
         const x = (pte >> 3) & 1;
@@ -492,19 +498,21 @@ class CPU {
             throw new Error('Fault: Page not marked Dirty');
         // D. Final Address Calculation
         const ppn = (pte >>> 10) & 0x3FFFFF;
+        let addr;
         if (isMega) {
-            // For a 4MB MegaPage, we use bits 21:0 from the original address
             const megaOffset = vAddr & 0x3FFFFF;
-            // (ppn & 0x3FFC00) isolates the physical bits for a superpage
-            return (((ppn & 0x3FFC00) << 12) | megaOffset) >>> 0;
+            addr = (((ppn & 0x3FFC00) << 12) | megaOffset) >>> 0;
         }
         else {
-            // Standard 4KB page
-            return ((ppn << 12) | (vAddr & 0xFFF)) >>> 0;
+            addr = ((ppn << 12) | (vAddr & 0xFFF)) >>> 0;
         }
+        this.mmu_cache.set(vpn, (addr & ~0xFFF) >>> 0);
+        return addr;
     }
     set_csr(csr, value) {
         this.csr[csr] = value;
+        if (csr === CSR_SATP)
+            this.mmu_cache.clear();
     }
     get_csr(csr) {
         return this.csr[csr];
@@ -567,7 +575,7 @@ class CPU {
                 }
                 else if ((instruction.binary & 0xFE007FFF) === 0x12000073) {
                     // SFENCE.VMA
-                    // @TODO clear TLB cache
+                    this.mmu_cache.clear();
                     this.pc += 4;
                     return;
                 }
