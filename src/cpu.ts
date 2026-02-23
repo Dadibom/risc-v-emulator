@@ -22,6 +22,7 @@ const CSR_MEPC = 0x341;
 const CSR_MCAUSE = 0x342;
 const CSR_MTVAL = 0x343;
 const CSR_MIP = 0x344;
+const CSR_SATP = 0x180;
 
 const CSR_MSTATUS_MPIE = 7;
 const CSR_MSTATUS_MIE = 3;
@@ -58,7 +59,8 @@ export class CPU {
   }
 
   executionStep() {
-    const instruction = this.ram.getInt32(this.pc, true);
+    const address = this.mmu_translate(this.pc, 'X');
+    const instruction = this.ram.getInt32(address, true);
     this.executeInstruction(instruction);
   }
 
@@ -316,13 +318,14 @@ export class CPU {
 
   private executeI_Type03(instruction: I_Type) {
     const { func3, rd, rs1, imm } = instruction;
-    const { registerSet, ram } = this;
+    const { registerSet } = this;
 
     switch (func3) {
       case 0x0: {
         const rs1Value = registerSet.getRegister(rs1);
 
-        const byte = ram.getInt8(rs1Value + imm);
+        const address = this.mmu_translate(rs1Value + imm, 'R');
+        const byte = this.ram.getInt8(address);
         registerSet.setRegister(rd, byte);
 
         this.pc += 4;
@@ -331,7 +334,8 @@ export class CPU {
       case 0x1: {
         const rs1Value = registerSet.getRegister(rs1);
 
-        const half = ram.getInt16(rs1Value + imm, true);
+        const address = this.mmu_translate(rs1Value + imm, 'R');
+        const half = this.ram.getInt16(address, true);
         registerSet.setRegister(rd, half);
 
         this.pc += 4;
@@ -340,7 +344,8 @@ export class CPU {
       case 0x2: {
         const rs1Value = registerSet.getRegister(rs1);
 
-        const word = ram.getInt32(rs1Value + imm, true);
+        const address = this.mmu_translate(rs1Value + imm, 'R');
+        const word = this.ram.getInt32(address, true);
         registerSet.setRegister(rd, word);
 
         this.pc += 4;
@@ -349,7 +354,8 @@ export class CPU {
       case 0x4: {
         const rs1Value = registerSet.getRegister(rs1);
 
-        const byte = ram.getUint8(rs1Value + imm);
+        const address = this.mmu_translate(rs1Value + imm, 'R');
+        const byte = this.ram.getUint8(address);
         registerSet.setRegister(rd, byte);
 
         this.pc += 4;
@@ -358,7 +364,8 @@ export class CPU {
       case 0x5: {
         const rs1Value = registerSet.getRegister(rs1);
 
-        const half = ram.getUint16(rs1Value + imm, true);
+        const address = this.mmu_translate(rs1Value + imm, 'R');
+        const half = this.ram.getUint16(address, true);
         registerSet.setRegister(rd, half);
 
         this.pc += 4;
@@ -476,10 +483,100 @@ export class CPU {
       const rs1Value = registerSet.getRegister(rs1);
 
       registerSet.setRegister(rd, this.pc + 4);
-      this.pc = rs1Value + imm;
+      // RISC-V JALR: target address is (rs1 + imm) with bit 0 cleared.
+      this.pc = (rs1Value + imm) & ~1;
       return;
     } else {
       throw new Error('Invalid Instruction');
+    }
+  }
+
+  mmu_translate(address: number, accessType: 'R' | 'W' | 'X'): number {
+    const satp = this.get_csr(CSR_SATP);
+    const pagingEnabled = (satp >>> 31) === 1;
+
+    // 1. Determine Effective Privilege Mode
+    let effectivePrivilege = this.currentPrivilege;
+    const mstatus = this.get_csr(CSR_MSTATUS);
+
+    if (this.currentPrivilege === Privilege.Machine) {
+      const mprv = (mstatus >> 17) & 1;
+      if (mprv === 1 && accessType !== 'X') {
+        effectivePrivilege = (mstatus >> 11) & 0b11; // MPP
+      } else {
+        // Must return unsigned to avoid RangeError in DataView
+        return address >>> 0;
+      }
+    }
+
+    if (!pagingEnabled) return address >>> 0;
+
+    // 2. Parse Virtual Address
+    const vpn1 = (address >>> 22) & 0x3FF;
+    const vpn0 = (address >>> 12) & 0x3FF;
+
+    // 3. Level 1 Walk (Root)
+    const rootPPN = satp & 0x3FFFFF;
+    const rootTableAddr = (rootPPN << 12) >>> 0; // Force unsigned physical address
+    const pte1 = this.ram.getUint32(rootTableAddr + (vpn1 << 2), true);
+
+    if ((pte1 & 1) === 0) throw new Error(`Page Fault: Invalid Level 1 at VA 0x${address.toString(16)}`);
+
+    // Check for MegaPage (R, W, or X bits set at Level 1)
+    if ((pte1 & 0xE) !== 0) {
+      const pte1ppn0 = (pte1 >>> 10) & 0x3FF;
+      if (pte1ppn0 !== 0) throw new Error('Page Fault: Misaligned superpage');
+      return this.check_permissions(pte1, address, effectivePrivilege, accessType, true);
+    }
+
+    // 4. Level 0 Walk (Leaf)
+    const pte1ppn = (pte1 >>> 10) & 0x3FFFFF;
+    const leafTableAddr = (pte1ppn << 12) >>> 0; // Force unsigned physical address
+    const pte0 = this.ram.getUint32(leafTableAddr + (vpn0 << 2), true);
+
+    if ((pte0 & 1) === 0) throw new Error(`Page Fault: Invalid Level 0 at VA 0x${address.toString(16)}`);
+
+    // Level 0 must have at least one R,W,X bit set
+    if ((pte0 & 0xE) === 0) throw new Error('Page Fault: Level 0 is not a leaf');
+
+    return this.check_permissions(pte0, address, effectivePrivilege, accessType, false);
+  }
+
+  // Check permissions for PTE
+  private check_permissions(pte: number, vAddr: number, priv: number, type: 'R' | 'W' | 'X', isMega: boolean): number {
+    const r = (pte >> 1) & 1;
+    const w = (pte >> 2) & 1;
+    const x = (pte >> 3) & 1;
+    const u = (pte >> 4) & 1;
+    const a = (pte >> 6) & 1;
+    const d = (pte >> 7) & 1;
+
+    // A. Privilege Checks
+    if (priv === Privilege.User && u === 0) throw new Error('Fault: User accessing Supervisor page');
+    if (priv === Privilege.Supervisor && u === 1) {
+      const sum = (this.get_csr(CSR_MSTATUS) >> 18) & 1;
+      if (sum === 0) throw new Error('Fault: Supervisor accessing User page without SUM');
+    }
+
+    // B. Access Type Checks
+    if (type === 'R' && !r) throw new Error('Fault: Read prohibited');
+    if (type === 'W' && !w) throw new Error('Fault: Write prohibited');
+    if (type === 'X' && !x) throw new Error('Fault: Execute prohibited');
+
+    // C. Dirty/Accessed Bits
+    if (!a) throw new Error('Fault: Page not marked Accessed');
+    if (type === 'W' && !d) throw new Error('Fault: Page not marked Dirty');
+
+    // D. Final Address Calculation
+    const ppn = (pte >>> 10) & 0x3FFFFF;
+    if (isMega) {
+      // For a 4MB MegaPage, we use bits 21:0 from the original address
+      const megaOffset = vAddr & 0x3FFFFF;
+      // (ppn & 0x3FFC00) isolates the physical bits for a superpage
+      return (((ppn & 0x3FFC00) << 12) | megaOffset) >>> 0;
+    } else {
+      // Standard 4KB page
+      return ((ppn << 12) | (vAddr & 0xFFF)) >>> 0;
     }
   }
 
@@ -524,7 +621,7 @@ export class CPU {
   }
 
   illegal_instruction(instruction: number) {
-    console.error('Encountered illegal instruction:', instruction);
+    console.error('Encountered illegal instruction:', instruction, this.pc);
     this.trap(2, instruction);
   }
 
@@ -554,6 +651,11 @@ export class CPU {
           // EBREAK
           this.trap(3);
           break;
+        } else if ((instruction.binary & 0xFE007FFF) === 0x12000073) {
+          // SFENCE.VMA
+          // @TODO clear TLB cache
+          this.pc += 4;
+          return;
         } else if (instruction.binary === 0b00110000001000000000000001110011) {
           // MRET
           if (this.currentPrivilege !== Privilege.Machine) {
@@ -703,7 +805,8 @@ export class CPU {
 
         const byte = getRange(rs2Value, 7, 0);
 
-        ram.setInt8(rs1Value + imm, byte);
+        const address = this.mmu_translate(rs1Value + imm, 'W');
+        this.ram.setInt8(address, byte);
         break;
       }
       case 0x1: {
@@ -715,7 +818,8 @@ export class CPU {
 
         const half = getRange(rs2Value, 15, 0);
 
-        ram.setInt16(rs1Value + imm, half, true);
+        const address = this.mmu_translate(rs1Value + imm, 'W');
+        this.ram.setInt16(address, half, true);
         break;
       }
       case 0x2: {
@@ -725,7 +829,8 @@ export class CPU {
         const rs1Value = registerSet.getRegister(rs1);
         const rs2Value = registerSet.getRegister(rs2);
 
-        ram.setInt32(rs1Value + imm, rs2Value, true);
+        const address = this.mmu_translate(rs1Value + imm, 'W');
+        this.ram.setInt32(address, rs2Value, true);
         break;
       }
       default:

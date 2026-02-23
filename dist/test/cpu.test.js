@@ -45,3 +45,28 @@ describe('Testing basic toy programs:', () => {
         expect(cpu.registerSet.getRegister(0)).toBe(0);
     });
 });
+describe('Control-flow regression cases:', () => {
+    test('jalr clears bit 0 of the target address', () => {
+        const cpu = new cpu_1.CPU(new ArrayBuffer(0), 0x200);
+        cpu.registerSet.setRegister(1, 0x11f65);
+        cpu.executeInstruction(assembler_1.Assembler.assembleLine('jalr x0, 0(x1)').binary);
+        // RISC-V spec: JALR target is (rs1 + imm) with bit 0 forced to zero.
+        expect(cpu.pc).toBe(0x11f64);
+    });
+    test('jalr applies signed immediate before jumping', () => {
+        const cpu = new cpu_1.CPU(new ArrayBuffer(0), 0x200);
+        cpu.registerSet.setRegister(1, 0x12000);
+        cpu.executeInstruction(assembler_1.Assembler.assembleLine('jalr x0, -8(x1)').binary);
+        expect(cpu.pc).toBe(0x11ff8);
+    });
+    test('beq uses a signed branch immediate for backward branches', () => {
+        const cpu = new cpu_1.CPU(new ArrayBuffer(0), 0x1000);
+        cpu.executeInstruction(assembler_1.Assembler.assembleLine('beq x0, x0, -4').binary);
+        expect(cpu.pc).toBe(0x0ffc);
+    });
+    test('jal uses a signed immediate for backward jumps', () => {
+        const cpu = new cpu_1.CPU(new ArrayBuffer(0), 0x1000);
+        cpu.executeInstruction(assembler_1.Assembler.assembleLine('jal x0, -16').binary);
+        expect(cpu.pc).toBe(0x0ff0);
+    });
+});

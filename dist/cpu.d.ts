@@ -20,6 +20,8 @@ export declare class CPU {
     private executeI_Type03;
     private executeI_Type13;
     private executeI_Type67;
+    mmu_translate(address: number, accessType: 'R' | 'W' | 'X'): number;
+    private check_permissions;
     set_csr(csr: number, value: number): void;
     get_csr(csr: number): number;
     set_csr_mstatus_bit(bit: number, value: number): void;
