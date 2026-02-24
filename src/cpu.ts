@@ -15,9 +15,16 @@ const inst_r = new R_Type({ binary: 1 });
 
 const CSR_MSTATUS = 0x300;
 const CSR_MISA = 0x301;
+const CSR_MEDELEG = 0x302;
+const CSR_MIDELEG = 0x303;
 const CSR_MIE = 0x304;
 const CSR_MTVEC = 0x305;
+const CSR_STVEC = 0x105;
 const CSR_MSCRATCH = 0x340;
+const CSR_SSCRATCH = 0x140;
+const CSR_SEPC = 0x141;
+const CSR_SCAUSE = 0x142;
+const CSR_STVAL = 0x143;
 const CSR_MEPC = 0x341;
 const CSR_MCAUSE = 0x342;
 const CSR_MTVAL = 0x343;
@@ -25,7 +32,10 @@ const CSR_MIP = 0x344;
 const CSR_SATP = 0x180;
 
 const CSR_MSTATUS_MPIE = 7;
+const CSR_MSTATUS_SPIE = 5;
 const CSR_MSTATUS_MIE = 3;
+const CSR_MSTATUS_SIE = 1;
+const CSR_MSTATUS_SPP = 8;
 
 enum Privilege {
   User = 0b00,  // 0
@@ -618,6 +628,22 @@ export class CPU {
   }
 
   trap(cause: number, mtval: number = 0) {
+    const delegatedToSupervisor =
+      this.currentPrivilege !== Privilege.Machine &&
+      (((this.get_csr(CSR_MEDELEG) >>> cause) & 1) === 1);
+
+    if (delegatedToSupervisor) {
+      this.set_csr(CSR_SEPC, this.pc);
+      this.set_csr(CSR_SCAUSE, cause);
+      this.set_csr(CSR_STVAL, mtval);
+      this.set_csr_mstatus_bit(CSR_MSTATUS_SPIE, this.get_csr_mstatus_bit(CSR_MSTATUS_SIE));
+      this.set_csr_mstatus_bit(CSR_MSTATUS_SIE, 0);
+      this.set_csr_mstatus_bit(CSR_MSTATUS_SPP, this.currentPrivilege === Privilege.Supervisor ? 1 : 0);
+      this.pc = this.get_csr(CSR_STVEC) & ~3; // Align to 4-byte boundary
+      this.currentPrivilege = Privilege.Supervisor;
+      return;
+    }
+
     this.set_csr(CSR_MEPC, this.pc);
     this.set_csr(CSR_MCAUSE, cause);
     this.set_csr(CSR_MTVAL, mtval);
@@ -675,6 +701,18 @@ export class CPU {
           this.set_csr_mstatus_bit(CSR_MSTATUS_MIE, this.get_csr_mstatus_bit(CSR_MSTATUS_MPIE));
           this.set_csr_mstatus_bit(CSR_MSTATUS_MPIE, 1);
           this.set_csr_mstatus_privilege(Privilege.User); // clear MPP
+          break;
+        } else if (instruction.binary === 0b00010000001000000000000001110011) {
+          // SRET
+          if (this.currentPrivilege !== Privilege.Supervisor) {
+            this.illegal_instruction(instruction.binary);
+            return;
+          }
+          this.pc = this.csr[CSR_SEPC];
+          this.currentPrivilege = this.get_csr_mstatus_bit(CSR_MSTATUS_SPP) ? Privilege.Supervisor : Privilege.User;
+          this.set_csr_mstatus_bit(CSR_MSTATUS_SIE, this.get_csr_mstatus_bit(CSR_MSTATUS_SPIE));
+          this.set_csr_mstatus_bit(CSR_MSTATUS_SPIE, 1);
+          this.set_csr_mstatus_bit(CSR_MSTATUS_SPP, 0);
           break;
         } else {
           this.illegal_instruction(instruction.binary);
