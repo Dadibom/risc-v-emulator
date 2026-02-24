@@ -608,7 +608,7 @@ class CPU {
                         this.illegal_instruction(instruction.binary);
                         return;
                     }
-                    this.pc = this.csr[CSR_MEPC] + 4;
+                    this.pc = this.csr[CSR_MEPC];
                     this.currentPrivilege = this.get_csr_mstatus_privilege(); // restore privilege from MPP
                     this.set_csr_mstatus_bit(CSR_MSTATUS_MIE, this.get_csr_mstatus_bit(CSR_MSTATUS_MPIE));
                     this.set_csr_mstatus_bit(CSR_MSTATUS_MPIE, 1);
@@ -617,7 +617,7 @@ class CPU {
                 }
                 else if (instruction.binary === 0b00010000001000000000000001110011) {
                     // SRET
-                    if (this.currentPrivilege !== Privilege.Supervisor) {
+                    if (this.currentPrivilege === Privilege.User) {
                         this.illegal_instruction(instruction.binary);
                         return;
                     }
@@ -645,10 +645,12 @@ class CPU {
                     this.illegal_instruction(instruction.binary);
                     return;
                 }
+                const csrrwOld = this.get_csr(csr);
+                const csrrwRs1 = this.registerSet.getRegister(rs1);
                 if (rd !== 0) {
-                    this.registerSet.setRegister(rd, this.get_csr(csr));
+                    this.registerSet.setRegister(rd, csrrwOld);
                 }
-                this.set_csr(csr, this.registerSet.getRegister(rs1));
+                this.set_csr(csr, csrrwRs1);
                 this.pc += 4;
                 break;
             case 0b010:
@@ -663,9 +665,11 @@ class CPU {
                     this.illegal_instruction(instruction.binary);
                     return;
                 }
-                this.registerSet.setRegister(rd, this.get_csr(csr));
+                const csrrsOld = this.get_csr(csr);
+                const csrrsRs1 = this.registerSet.getRegister(rs1);
+                this.registerSet.setRegister(rd, csrrsOld);
                 if (rs1 !== 0) {
-                    this.set_csr(csr, this.get_csr(csr) | this.registerSet.getRegister(rs1));
+                    this.set_csr(csr, csrrsOld | csrrsRs1);
                 }
                 this.pc += 4;
                 break;
@@ -681,9 +685,11 @@ class CPU {
                     this.illegal_instruction(instruction.binary);
                     return;
                 }
-                this.registerSet.setRegister(rd, this.get_csr(csr));
+                const csrrcOld = this.get_csr(csr);
+                const csrrcRs1 = this.registerSet.getRegister(rs1);
+                this.registerSet.setRegister(rd, csrrcOld);
                 if (rs1 !== 0) {
-                    this.set_csr(csr, this.get_csr(csr) & ~this.registerSet.getRegister(rs1));
+                    this.set_csr(csr, csrrcOld & ~csrrcRs1);
                 }
                 this.pc += 4;
                 break;
