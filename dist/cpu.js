@@ -55,7 +55,10 @@ class CPU {
         this.registerSet = new RegisterSet(32);
         this.csr = new Uint32Array(4096);
         this.currentPrivilege = Privilege.Machine;
-        this.mmu_cache = new Map();
+        this.TLB_SIZE = 1024; // Must be power of 2
+        this.TLB_MASK = 1023;
+        this.tlb_tags = new Int32Array(1024).fill(-1); // -1 = invalid
+        this.tlb_ppns = new Uint32Array(1024);
         this.cycle_count = 0;
         this.extensions = {
             M: false,
@@ -443,25 +446,21 @@ class CPU {
     mmu_translate(address, accessType) {
         // 1. Determine Effective Privilege Mode
         let effectivePrivilege = this.currentPrivilege;
-        if (this.currentPrivilege === Privilege.Machine) {
-            const mstatus = this.get_csr(CSR_MSTATUS);
+        if (effectivePrivilege === Privilege.Machine) {
+            const mstatus = this.csr[CSR_MSTATUS];
             const mprv = (mstatus >> 17) & 1;
-            if (mprv === 1 && accessType !== 'X') {
-                effectivePrivilege = (mstatus >> 11) & 0b11; // MPP
-            }
-            else {
-                // Must return unsigned to avoid RangeError in DataView
+            if (!mprv || accessType === 'X')
                 return address >>> 0;
-            }
+            effectivePrivilege = (mstatus >> 11) & 0b11; // restore MPP assignment
         }
-        const satp = this.get_csr(CSR_SATP);
+        const satp = this.csr[CSR_SATP];
         const pagingEnabled = (satp >>> 31) === 1;
         if (!pagingEnabled)
             return address >>> 0;
-        const vpn = address & 0xFFFFF000;
-        const cached = this.mmu_cache.get(vpn);
-        if (cached !== undefined) {
-            //return cached | (address & 0xFFF);
+        const vpnKey = (address >>> 12) & this.TLB_MASK; // index into TLB
+        const tag = address & 0xFFFFF000; // full VPN as tag
+        if (this.tlb_tags[vpnKey] === tag) {
+            return (this.tlb_ppns[vpnKey] | (address & 0xFFF)) >>> 0;
         }
         // 2. Parse Virtual Address
         const vpn1 = (address >>> 22) & 0x3FF;
@@ -477,7 +476,7 @@ class CPU {
             const pte1ppn0 = (pte1 >>> 10) & 0x3FF;
             if (pte1ppn0 !== 0)
                 throw new Error('Page Fault: Misaligned superpage');
-            return this.check_permissions(vpn, pte1, address, effectivePrivilege, accessType, true);
+            return this.check_permissions(pte1, address, effectivePrivilege, accessType, true);
         }
         // 4. Level 0 Walk (Leaf)
         const pte1ppn = (pte1 >>> 10) & 0x3FFFFF;
@@ -488,10 +487,10 @@ class CPU {
         // Level 0 must have at least one R,W,X bit set
         if ((pte0 & 0xE) === 0)
             throw new Error('Page Fault: Level 0 is not a leaf');
-        return this.check_permissions(vpn, pte0, address, effectivePrivilege, accessType, false);
+        return this.check_permissions(pte0, address, effectivePrivilege, accessType, false);
     }
     // Check permissions for PTE
-    check_permissions(vpn, pte, vAddr, priv, type, isMega) {
+    check_permissions(pte, vAddr, priv, type, isMega) {
         const r = (pte >> 1) & 1;
         const w = (pte >> 2) & 1;
         const x = (pte >> 3) & 1;
@@ -528,7 +527,9 @@ class CPU {
         else {
             addr = ((ppn << 12) | (vAddr & 0xFFF)) >>> 0;
         }
-        this.mmu_cache.set(vpn, addr & ~0xFFF >>> 0);
+        const vpnKey = (vAddr >>> 12) & this.TLB_MASK;
+        this.tlb_tags[vpnKey] = vAddr & 0xFFFFF000;
+        this.tlb_ppns[vpnKey] = addr & 0xFFFFF000;
         return addr;
     }
     set_csr(csr, value) {
@@ -539,7 +540,7 @@ class CPU {
         }
         this.csr[csr] = value;
         if (csr === CSR_SATP)
-            this.mmu_cache.clear();
+            this.tlb_tags.fill(-1);
     }
     get_csr(csr) {
         if (csr === CSR_CYCLE)
@@ -621,7 +622,7 @@ class CPU {
                 }
                 else if ((instruction.binary & 0xFE007FFF) === 0x12000073) {
                     // SFENCE.VMA
-                    this.mmu_cache.clear();
+                    this.tlb_tags.fill(-1);
                     this.pc += 4;
                     return;
                 }

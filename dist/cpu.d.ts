@@ -12,7 +12,10 @@ export declare class CPU {
     ram: DataView;
     csr: Uint32Array;
     currentPrivilege: Privilege;
-    mmu_cache: Map<number, number>;
+    private readonly TLB_SIZE;
+    private readonly TLB_MASK;
+    private tlb_tags;
+    private tlb_ppns;
     cycle_count: number;
     extensions: ExtensionMap;
     constructor(ram: ArrayBuffer, pc: number, extensions?: ExtensionMap);

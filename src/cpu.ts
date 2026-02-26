@@ -61,7 +61,10 @@ export class CPU {
   ram: DataView;
   csr: Uint32Array = new Uint32Array(4096);
   currentPrivilege: Privilege = Privilege.Machine;
-  mmu_cache: Map<number, number> = new Map();
+  private readonly TLB_SIZE = 1024; // Must be power of 2
+  private readonly TLB_MASK = 1023;
+  private tlb_tags: Int32Array = new Int32Array(1024).fill(-1); // -1 = invalid
+  private tlb_ppns: Uint32Array = new Uint32Array(1024);
   cycle_count: number = 0;
 
   extensions: ExtensionMap = {
@@ -519,26 +522,23 @@ export class CPU {
     // 1. Determine Effective Privilege Mode
     let effectivePrivilege = this.currentPrivilege;
 
-    if (this.currentPrivilege === Privilege.Machine) {
-      const mstatus = this.get_csr(CSR_MSTATUS);
+    if (effectivePrivilege === Privilege.Machine) {
+      const mstatus = this.csr[CSR_MSTATUS];
       const mprv = (mstatus >> 17) & 1;
-      if (mprv === 1 && accessType !== 'X') {
-        effectivePrivilege = (mstatus >> 11) & 0b11; // MPP
-      } else {
-        // Must return unsigned to avoid RangeError in DataView
-        return address >>> 0;
-      }
+      if (!mprv || accessType === 'X') return address >>> 0;
+      effectivePrivilege = (mstatus >> 11) & 0b11; // restore MPP assignment
     }
 
-    const satp = this.get_csr(CSR_SATP);
+    const satp = this.csr[CSR_SATP];
     const pagingEnabled = (satp >>> 31) === 1;
 
     if (!pagingEnabled) return address >>> 0;
 
-    const vpn = address & 0xFFFFF000;
-    const cached = this.mmu_cache.get(vpn);
-    if (cached !== undefined) {
-      return cached | (address & 0xFFF);
+    const vpnKey = (address >>> 12) & this.TLB_MASK;  // index into TLB
+    const tag = address & 0xFFFFF000;               // full VPN as tag
+
+    if (this.tlb_tags[vpnKey] === tag) {
+      return (this.tlb_ppns[vpnKey] | (address & 0xFFF)) >>> 0;
     }
 
     // 2. Parse Virtual Address
@@ -556,7 +556,7 @@ export class CPU {
     if ((pte1 & 0xE) !== 0) {
       const pte1ppn0 = (pte1 >>> 10) & 0x3FF;
       if (pte1ppn0 !== 0) throw new Error('Page Fault: Misaligned superpage');
-      return this.check_permissions(vpn, pte1, address, effectivePrivilege, accessType, true);
+      return this.check_permissions(pte1, address, effectivePrivilege, accessType, true);
     }
 
     // 4. Level 0 Walk (Leaf)
@@ -569,11 +569,11 @@ export class CPU {
     // Level 0 must have at least one R,W,X bit set
     if ((pte0 & 0xE) === 0) throw new Error('Page Fault: Level 0 is not a leaf');
 
-    return this.check_permissions(vpn, pte0, address, effectivePrivilege, accessType, false);
+    return this.check_permissions(pte0, address, effectivePrivilege, accessType, false);
   }
 
   // Check permissions for PTE
-  private check_permissions(vpn: number, pte: number, vAddr: number, priv: number, type: 'R' | 'W' | 'X', isMega: boolean): number {
+  private check_permissions(pte: number, vAddr: number, priv: number, type: 'R' | 'W' | 'X', isMega: boolean): number {
     const r = (pte >> 1) & 1;
     const w = (pte >> 2) & 1;
     const x = (pte >> 3) & 1;
@@ -606,7 +606,9 @@ export class CPU {
     } else {
       addr = ((ppn << 12) | (vAddr & 0xFFF)) >>> 0;
     }
-    this.mmu_cache.set(vpn, addr & ~0xFFF >>> 0);
+    const vpnKey = (vAddr >>> 12) & this.TLB_MASK;
+    this.tlb_tags[vpnKey] = vAddr & 0xFFFFF000;
+    this.tlb_ppns[vpnKey] = addr & 0xFFFFF000;
     return addr;
   }
 
@@ -617,7 +619,7 @@ export class CPU {
       return;
   }
     this.csr[csr] = value;
-    if (csr === CSR_SATP) this.mmu_cache.clear();
+    if (csr === CSR_SATP) this.tlb_tags.fill(-1);
   }
 
   get_csr(csr: number): number {
@@ -708,7 +710,7 @@ export class CPU {
           break;
         } else if ((instruction.binary & 0xFE007FFF) === 0x12000073) {
           // SFENCE.VMA
-          this.mmu_cache.clear();
+          this.tlb_tags.fill(-1);
           this.pc += 4;
           return;
         } else if (instruction.binary === 0b00110000001000000000000001110011) {
