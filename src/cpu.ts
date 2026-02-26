@@ -32,6 +32,15 @@ const CSR_MIP = 0x344;
 const CSR_SATP = 0x180;
 const CSR_CYCLE = 0xC00;
 const CSR_CYCLEH = 0xC80;
+const CSR_SSTATUS = 0x100;
+
+const SSTATUS_MASK = (1 << 1)  |  // SIE
+                     (1 << 5)  |  // SPIE
+                     (1 << 8)  |  // SPP
+                     (1 << 18) |  // SUM  ← was missing
+                     (1 << 19) |  // MXR
+                     (3 << 13) |  // FS
+                     (3 << 15);   // XS
 
 const CSR_MSTATUS_MPIE = 7;
 const CSR_MSTATUS_SPIE = 5;
@@ -602,6 +611,11 @@ export class CPU {
   }
 
   set_csr(csr: number, value: number) {
+    if (csr === CSR_SSTATUS) {
+      // Only update the sstatus-visible bits in mstatus
+      this.csr[CSR_MSTATUS] = (this.csr[CSR_MSTATUS] & ~SSTATUS_MASK) | (value & SSTATUS_MASK);
+      return;
+  }
     this.csr[csr] = value;
     if (csr === CSR_SATP) this.mmu_cache.clear();
   }
@@ -609,6 +623,7 @@ export class CPU {
   get_csr(csr: number): number {
     if (csr === CSR_CYCLE) return this.cycle_count >>> 0;             // low 32 bits
     if (csr === CSR_CYCLEH) return Math.floor(this.cycle_count / 0x100000000) >>> 0; // high 32 bits
+    if (csr === CSR_SSTATUS) return this.csr[CSR_MSTATUS] & SSTATUS_MASK; // sstatus is a view of mstatus
     return this.csr[csr];
   }
 
@@ -661,7 +676,7 @@ export class CPU {
   }
 
   illegal_instruction(instruction: number) {
-    console.error('Encountered illegal instruction:', instruction, this.pc);
+    console.error('Encountered illegal instruction:', instruction.toString(16), 'at PC: 0x', this.pc.toString(16));
     this.trap(2, instruction);
   }
 

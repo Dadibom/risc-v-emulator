@@ -29,6 +29,14 @@ const CSR_MIP = 0x344;
 const CSR_SATP = 0x180;
 const CSR_CYCLE = 0xC00;
 const CSR_CYCLEH = 0xC80;
+const CSR_SSTATUS = 0x100;
+const SSTATUS_MASK = (1 << 1) | // SIE
+    (1 << 5) | // SPIE
+    (1 << 8) | // SPP
+    (1 << 18) | // SUM  ← was missing
+    (1 << 19) | // MXR
+    (3 << 13) | // FS
+    (3 << 15); // XS
 const CSR_MSTATUS_MPIE = 7;
 const CSR_MSTATUS_SPIE = 5;
 const CSR_MSTATUS_MIE = 3;
@@ -453,7 +461,7 @@ class CPU {
         const vpn = address & 0xFFFFF000;
         const cached = this.mmu_cache.get(vpn);
         if (cached !== undefined) {
-            return cached | (address & 0xFFF);
+            //return cached | (address & 0xFFF);
         }
         // 2. Parse Virtual Address
         const vpn1 = (address >>> 22) & 0x3FF;
@@ -524,6 +532,11 @@ class CPU {
         return addr;
     }
     set_csr(csr, value) {
+        if (csr === CSR_SSTATUS) {
+            // Only update the sstatus-visible bits in mstatus
+            this.csr[CSR_MSTATUS] = (this.csr[CSR_MSTATUS] & ~SSTATUS_MASK) | (value & SSTATUS_MASK);
+            return;
+        }
         this.csr[csr] = value;
         if (csr === CSR_SATP)
             this.mmu_cache.clear();
@@ -533,6 +546,8 @@ class CPU {
             return this.cycle_count >>> 0; // low 32 bits
         if (csr === CSR_CYCLEH)
             return Math.floor(this.cycle_count / 0x100000000) >>> 0; // high 32 bits
+        if (csr === CSR_SSTATUS)
+            return this.csr[CSR_MSTATUS] & SSTATUS_MASK; // sstatus is a view of mstatus
         return this.csr[csr];
     }
     set_csr_mstatus_bit(bit, value) {
@@ -577,7 +592,7 @@ class CPU {
         this.currentPrivilege = Privilege.Machine;
     }
     illegal_instruction(instruction) {
-        console.error('Encountered illegal instruction:', instruction, this.pc);
+        console.error('Encountered illegal instruction:', instruction.toString(16), 'at PC: 0x', this.pc.toString(16));
         this.trap(2, instruction);
     }
     is_csr_addr_readonly(csr) {
