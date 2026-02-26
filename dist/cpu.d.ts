@@ -13,6 +13,7 @@ export declare class CPU {
     csr: Uint32Array;
     currentPrivilege: Privilege;
     mmu_cache: Map<number, number>;
+    cycle_count: number;
     extensions: ExtensionMap;
     constructor(ram: ArrayBuffer, pc: number, extensions?: ExtensionMap);
     executionStep(): void;

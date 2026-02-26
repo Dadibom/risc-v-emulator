@@ -30,6 +30,8 @@ const CSR_MCAUSE = 0x342;
 const CSR_MTVAL = 0x343;
 const CSR_MIP = 0x344;
 const CSR_SATP = 0x180;
+const CSR_CYCLE = 0xC00;
+const CSR_CYCLEH = 0xC80;
 
 const CSR_MSTATUS_MPIE = 7;
 const CSR_MSTATUS_SPIE = 5;
@@ -51,6 +53,7 @@ export class CPU {
   csr: Uint32Array = new Uint32Array(4096);
   currentPrivilege: Privilege = Privilege.Machine;
   mmu_cache: Map<number, number> = new Map();
+  cycle_count: number = 0;
 
   extensions: ExtensionMap = {
     M: false,
@@ -73,6 +76,7 @@ export class CPU {
     const address = this.mmu_translate(this.pc, 'X');
     const instruction = this.ram.getInt32(address, true);
     this.executeInstruction(instruction);
+    ++this.cycle_count;
   }
 
   executeInstruction(instruction: number) {
@@ -603,6 +607,8 @@ export class CPU {
   }
 
   get_csr(csr: number): number {
+    if (csr === CSR_CYCLE) return this.cycle_count >>> 0;             // low 32 bits
+    if (csr === CSR_CYCLEH) return Math.floor(this.cycle_count / 0x100000000) >>> 0; // high 32 bits
     return this.csr[csr];
   }
 

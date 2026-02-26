@@ -27,6 +27,8 @@ const CSR_MCAUSE = 0x342;
 const CSR_MTVAL = 0x343;
 const CSR_MIP = 0x344;
 const CSR_SATP = 0x180;
+const CSR_CYCLE = 0xC00;
+const CSR_CYCLEH = 0xC80;
 const CSR_MSTATUS_MPIE = 7;
 const CSR_MSTATUS_SPIE = 5;
 const CSR_MSTATUS_MIE = 3;
@@ -46,6 +48,7 @@ class CPU {
         this.csr = new Uint32Array(4096);
         this.currentPrivilege = Privilege.Machine;
         this.mmu_cache = new Map();
+        this.cycle_count = 0;
         this.extensions = {
             M: false,
         };
@@ -63,6 +66,7 @@ class CPU {
         const address = this.mmu_translate(this.pc, 'X');
         const instruction = this.ram.getInt32(address, true);
         this.executeInstruction(instruction);
+        ++this.cycle_count;
     }
     executeInstruction(instruction) {
         const opcode = instruction & 0x7F;
@@ -525,6 +529,10 @@ class CPU {
             this.mmu_cache.clear();
     }
     get_csr(csr) {
+        if (csr === CSR_CYCLE)
+            return this.cycle_count >>> 0; // low 32 bits
+        if (csr === CSR_CYCLEH)
+            return Math.floor(this.cycle_count / 0x100000000) >>> 0; // high 32 bits
         return this.csr[csr];
     }
     set_csr_mstatus_bit(bit, value) {
